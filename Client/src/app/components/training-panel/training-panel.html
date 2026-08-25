@@ -1,0 +1,86 @@
+<div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden shrink-0 mb-4">
+  <div class="bg-gray-100 px-4 py-3 border-b border-gray-200">
+    <h2 class="font-medium text-gray-700 text-sm">Training</h2>
+  </div>
+  <div class="p-4 flex flex-col gap-4">
+    <!-- Advanced Settings Toggle -->
+    <div>
+      <button (click)="showAdvanced = !showAdvanced" class="text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1 transition-colors">
+        <svg class="w-4 h-4 transition-transform" [class.rotate-90]="showAdvanced" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+        Advanced Settings
+      </button>
+      
+      @if (showAdvanced) {
+        <div class="mt-3 p-3 bg-gray-50 border border-gray-200 rounded-md text-sm">
+          <label class="block text-gray-700 font-medium mb-1">K-Nearest Neighbors (k = {{mlService.kValue()}})</label>
+          <input type="range" min="1" max="10" [value]="mlService.kValue()" (input)="updateKValue($event)" class="w-full">
+          <p class="text-xs text-gray-500 mt-1">Larger k values provide smoother predictions but require more examples.</p>
+        </div>
+      }
+    </div>
+
+    <!-- Train Button -->
+    <button 
+      (click)="train()" 
+      [disabled]="mlService.isTraining() || !mlService.isModelLoaded()"
+      class="w-full py-3 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-md font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm flex items-center justify-center gap-2">
+      
+      @if (!mlService.isModelLoaded()) {
+        <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+        Loading ML Core...
+      } @else if (mlService.isTraining()) {
+        <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+        Training...
+      } @else {
+        Train Model
+      }
+    </button>
+  </div>
+</div>
+
+<!-- Preview Section -->
+@if (mlService.isTrained()) {
+<div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden shrink-0">
+  <div class="bg-gray-100 px-4 py-3 border-b border-gray-200 flex justify-between items-center">
+    <h2 class="font-medium text-gray-700 text-sm">Preview</h2>
+    <div class="flex gap-2">
+      <button [class.bg-blue-100]="previewMode === 'camera'" [class.text-blue-600]="previewMode === 'camera'" (click)="setPreviewMode('camera')" class="text-xs px-2 py-1 rounded-md font-medium text-gray-500 hover:bg-gray-200 transition-colors">Camera</button>
+      <button [class.bg-blue-100]="previewMode === 'image'" [class.text-blue-600]="previewMode === 'image'" (click)="setPreviewMode('image')" class="text-xs px-2 py-1 rounded-md font-medium text-gray-500 hover:bg-gray-200 transition-colors">Image</button>
+    </div>
+  </div>
+  <div class="p-4">
+    @if (previewMode === 'image') {
+      <div class="mb-4">
+        <label class="block w-full text-center p-4 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
+          <span class="text-sm text-gray-500 font-medium">Click to upload an image</span>
+          <input type="file" accept="image/*" class="hidden" (change)="handleImageUpload($event)">
+        </label>
+        @if (uploadedImageBase64) {
+          <div class="mt-2 flex justify-center">
+            <img [src]="uploadedImageBase64" class="max-h-48 rounded-md shadow-sm border border-gray-200">
+          </div>
+        }
+      </div>
+    }
+    @if (mlService.predictions(); as predictions) {
+      <div class="flex flex-col gap-3">
+        @for (item of predictions.confidences | keyvalue; track item.key) {
+          <div>
+            <div class="flex justify-between text-sm mb-1">
+              <span class="font-medium text-gray-700">{{item.key}}</span>
+              <span class="font-mono text-gray-500">{{ (item.value * 100).toFixed(0) }}%</span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
+              <div class="h-2.5 rounded-full bg-blue-500" 
+                   [style.background-color]="classManager.getClassColorByName(item.key)"
+                   [style.width]="(item.value * 100) + '%'"></div>
+            </div>
+          </div>
+        }
+      </div>
+    } @else {
+      <div class="text-sm text-gray-500 italic text-center py-4">Waiting for camera...</div>
+    }
+  </div>
+</div>
+}

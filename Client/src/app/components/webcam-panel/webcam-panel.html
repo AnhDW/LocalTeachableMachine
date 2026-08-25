@@ -1,0 +1,22 @@
+<div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden shrink-0">
+  <div class="bg-gray-100 px-4 py-3 border-b border-gray-200 flex justify-between items-center">
+    <h2 class="font-medium text-gray-700 text-sm">Webcam Input</h2>
+    <label class="relative inline-flex items-center cursor-pointer">
+      <input type="checkbox" class="sr-only peer" [checked]="webcamService.isWebcamOn()" (change)="toggleWebcam()">
+      <div class="w-9 h-5 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-500"></div>
+    </label>
+  </div>
+  <div class="p-4 flex justify-center items-center bg-gray-50 min-h-[250px]">
+    <!-- Make sure we give the video an ID or attach it to the service so capture can read from it globally if needed.
+         Since ml.service or app.ts needs it, we can expose the HTMLVideoElement from WebcamService later.
+    -->
+    <video #webcamVideo id="globalWebcamVideo" autoplay playsinline muted class="w-full h-auto rounded-md shadow-sm border border-gray-200 object-cover" [hidden]="!webcamService.isWebcamOn()" style="transform: scaleX(-1);"></video>
+    
+    @if (!webcamService.isWebcamOn()) {
+      <div class="text-gray-400 text-sm flex flex-col items-center">
+        <svg class="w-12 h-12 mb-2 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+        Camera is off
+      </div>
+    }
+  </div>
+</div>

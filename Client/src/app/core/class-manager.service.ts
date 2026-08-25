@@ -4,21 +4,30 @@ export interface ClassItem {
   id: string;
   name: string;
   samples: string[];
+  color: string;
 }
+
+const CLASS_COLORS = ['#F87171', '#60A5FA', '#34D399', '#FBBF24', '#A78BFA', '#F472B6', '#38BDF8'];
 
 @Injectable({
   providedIn: 'root'
 })
 export class ClassManagerService {
   classes = signal<ClassItem[]>([
-    { id: 'class-1', name: 'Class 1', samples: [] },
-    { id: 'class-2', name: 'Class 2', samples: [] }
+    { id: 'class-1', name: 'Class 1', samples: [], color: CLASS_COLORS[0] },
+    { id: 'class-2', name: 'Class 2', samples: [], color: CLASS_COLORS[1] }
   ]);
 
   addClass() {
     const current = this.classes();
     const newId = `class-${current.length + 1}`;
-    this.classes.set([...current, { id: newId, name: `Class ${current.length + 1}`, samples: [] }]);
+    const color = CLASS_COLORS[current.length % CLASS_COLORS.length];
+    this.classes.set([...current, { id: newId, name: `Class ${current.length + 1}`, samples: [], color }]);
+  }
+
+  getClassColorByName(name: string): string {
+    const cls = this.classes().find(c => c.name === name);
+    return (cls && cls.color) ? cls.color : '#3B82F6'; // fallback to blue
   }
 
   removeClass(id: string) {

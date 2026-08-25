@@ -1,0 +1,10 @@
+<div class="flex flex-col gap-4">
+  @for (cls of classManager.classes(); track cls.id) {
+    <app-class-card [cls]="cls"></app-class-card>
+  }
+
+  <button (click)="addClass()" class="mt-2 py-3 bg-white border-2 border-dashed border-gray-300 text-gray-500 hover:text-gray-700 hover:border-gray-400 hover:bg-gray-50 rounded-lg flex items-center justify-center gap-2 font-medium transition-colors shadow-sm shrink-0">
+    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+    Add a class
+  </button>
+</div>
