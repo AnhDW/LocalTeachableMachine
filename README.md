@@ -57,4 +57,4 @@ Yêu cầu hệ thống: [Node.js](https://nodejs.org/) (khuyến nghị bản L
 
 ## 🚧 Lộ trình phát triển tương lai (Roadmap)
 - [ ] Tích hợp tính năng Lưu / Tải Project (Lưu dữ liệu cấu trúc mạng KNN xuống LocalStorage hoặc file `.json`).
-- [ ] Xây dựng Engine độc lập bóc tách lõi MobileNet để cho phép ứng dụng chạy Offline 100% mà không cần đợi nạp Model từ Internet (Đang lên kế hoạch thử nghiệm).
+- [ ] Xây dựng Engine độc lập bóc tách lõi MobileNet để cho phép ứng dụng chạy Offline 100% mà không cần đợi nạp Model từ Internet.
