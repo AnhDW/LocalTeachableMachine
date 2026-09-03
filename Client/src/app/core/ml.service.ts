@@ -132,4 +132,40 @@ export class MlService {
       activation.dispose();
     }
   }
+
+  exportModel(): string | null {
+    if (!this.classifier || !this.isTrained()) return null;
+    
+    const dataset = this.classifier.getClassifierDataset();
+    const datasetObj: any = {};
+    
+    Object.keys(dataset).forEach((key) => {
+      const data = dataset[key].dataSync();
+      datasetObj[key] = {
+        data: Array.from(data),
+        shape: dataset[key].shape
+      };
+    });
+    
+    return JSON.stringify(datasetObj);
+  }
+
+  importModel(jsonStr: string) {
+    if (!this.classifier) return;
+    try {
+      this.classifier.clearAllClasses();
+      const parsed = JSON.parse(jsonStr);
+      const newDataset: {[label: string]: tf.Tensor2D} = {};
+      
+      Object.keys(parsed).forEach(key => {
+        newDataset[key] = tf.tensor2d(parsed[key].data, parsed[key].shape);
+      });
+      
+      this.classifier.setClassifierDataset(newDataset);
+      this.isTrained.set(true);
+      this.smoothedConfidences = {};
+    } catch (e) {
+      console.error("Failed to import model", e);
+    }
+  }
 }
