@@ -44,7 +44,14 @@ export class TrainingPanelComponent implements OnDestroy {
     if (this.predictLoopId) cancelAnimationFrame(this.predictLoopId);
     
     const loop = async () => {
-      if (this.previewMode === 'camera' && this.mlService.isTrained() && this.webcamService.isWebcamOn() && this.webcamService.videoElement) {
+      if (
+        this.previewMode === 'camera' && 
+        this.mlService.isTrained() && 
+        this.webcamService.isWebcamOn() && 
+        this.webcamService.videoElement &&
+        this.webcamService.videoElement.readyState >= 2 &&
+        this.webcamService.videoElement.videoWidth > 0
+      ) {
         await this.mlService.predict(this.webcamService.videoElement);
       }
       // If we are not in camera mode, we still keep the loop alive but it will just idle, 

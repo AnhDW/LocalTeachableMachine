@@ -58,19 +58,28 @@ export class ClassManagerService {
     }));
   }
 
+  private audioCtx: AudioContext | null = null;
+
   playBeep() {
-    const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
-    const oscillator = audioCtx.createOscillator();
-    const gainNode = audioCtx.createGain();
-    
-    oscillator.type = 'sine';
-    oscillator.frequency.setValueAtTime(800, audioCtx.currentTime);
-    gainNode.gain.setValueAtTime(0.05, audioCtx.currentTime); // volume 5%
-    
-    oscillator.connect(gainNode);
-    gainNode.connect(audioCtx.destination);
-    
-    oscillator.start();
-    oscillator.stop(audioCtx.currentTime + 0.05); // 50ms beep
+    try {
+      if (!this.audioCtx) {
+        this.audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+      }
+      
+      const oscillator = this.audioCtx.createOscillator();
+      const gainNode = this.audioCtx.createGain();
+      
+      oscillator.type = 'sine';
+      oscillator.frequency.setValueAtTime(800, this.audioCtx.currentTime);
+      gainNode.gain.setValueAtTime(0.05, this.audioCtx.currentTime); // volume 5%
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(this.audioCtx.destination);
+      
+      oscillator.start();
+      oscillator.stop(this.audioCtx.currentTime + 0.05); // 50ms beep
+    } catch (e) {
+      console.warn('AudioContext error:', e);
+    }
   }
 }

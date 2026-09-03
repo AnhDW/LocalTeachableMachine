@@ -29,7 +29,8 @@ export class MlService {
     this.classifier = knnClassifier.create();
     this.mobilenetModel = await mobilenet.load({ 
       version: 2, 
-      alpha: 1.0
+      alpha: 1.0,
+      modelUrl: '/models/mobilenet/model.json'
     });
     this.isModelLoaded.set(true);
   }
@@ -54,6 +55,7 @@ export class MlService {
     this.classifier.clearAllClasses();
     this.smoothedConfidences = {};
 
+    let frameCount = 0;
     for (const cls of classes) {
       if (cls.samples.length === 0) continue;
       
@@ -62,6 +64,12 @@ export class MlService {
         const activation = this.mobilenetModel.infer(img, true);
         this.classifier.addExample(activation, cls.name);
         activation.dispose();
+        
+        frameCount++;
+        if (frameCount % 10 === 0) {
+          // Nhường quyền cho browser render mỗi 10 ảnh để tối ưu tốc độ mà không làm đơ UI
+          await tf.nextFrame();
+        }
       }
     }
     
@@ -98,7 +106,6 @@ export class MlService {
       });
       
       activation.dispose();
-      await tf.nextFrame(); // Nhường quyền cho trình duyệt vẽ lại giao diện
     }
   }
 
