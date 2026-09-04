@@ -22,6 +22,13 @@ export class ClassManagerService {
 
   constructor(private mlService: MlService) {}
 
+  reset() {
+    this.classes.set([
+      { id: 'class-1', name: 'Class 1', samples: [], color: CLASS_COLORS[0], trainedCount: 0 },
+      { id: 'class-2', name: 'Class 2', samples: [], color: CLASS_COLORS[1], trainedCount: 0 }
+    ]);
+  }
+
   addClass() {
     const current = this.classes();
     const newId = `class-${current.length + 1}`;

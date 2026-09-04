@@ -45,19 +45,18 @@ import { RouterLink } from '@angular/router';
             </div>
           </div>
 
-          <!-- Pose Project -->
-          <div class="bg-gray-50 rounded-xl shadow-sm border border-gray-200 opacity-60 cursor-not-allowed flex flex-col overflow-hidden relative">
-            <div class="absolute inset-0 bg-gray-50/50 flex items-center justify-center z-10">
-              <span class="bg-gray-800 text-white px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">Coming Soon</span>
-            </div>
-            <div class="h-48 bg-gray-100 flex items-center justify-center">
-              <svg class="w-20 h-20 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+          <!-- Hand Project -->
+          <a routerLink="/hand" class="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-lg hover:border-blue-400 transition-all cursor-pointer flex flex-col overflow-hidden group">
+            <div class="h-48 bg-blue-50 flex items-center justify-center">
+              <svg class="w-20 h-20 text-blue-500 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11"></path>
+              </svg>
             </div>
             <div class="p-6">
-              <h3 class="text-xl font-bold text-gray-800 mb-2">Pose Project</h3>
-              <p class="text-gray-600 text-sm">Dạy mô hình nhận diện các tư thế cơ thể từ webcam.</p>
+              <h3 class="text-xl font-bold text-gray-800 mb-2">Hand Project</h3>
+              <p class="text-gray-600 text-sm">Dạy máy học nhận diện 21 điểm khớp trên bàn tay và các thủ ngữ.</p>
             </div>
-          </div>
+          </a>
         </div>
       </main>
     </div>
