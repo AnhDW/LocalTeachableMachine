@@ -15,7 +15,7 @@ import { RouterLink } from '@angular/router';
 
       <main class="flex-1 flex flex-col items-center justify-center p-6">
         <div class="text-center mb-12">
-          <h2 class="text-4xl font-bold text-gray-800 mb-4">Mở Dự Án Mới</h2>
+          <h2 class="text-4xl font-bold text-gray-800 mb-4">Dự Án</h2>
           <p class="text-gray-500 text-lg">Lựa chọn loại dữ liệu bạn muốn dạy cho máy học</p>
         </div>
 
@@ -63,4 +63,4 @@ import { RouterLink } from '@angular/router';
     </div>
   `
 })
-export class HubComponent {}
+export class HubComponent { }
