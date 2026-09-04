@@ -1,10 +1,12 @@
 import { Injectable, signal } from '@angular/core';
+import { MlService } from './ml.service';
 
 export interface ClassItem {
   id: string;
   name: string;
   samples: string[];
   color: string;
+  trainedCount: number;
 }
 
 const CLASS_COLORS = ['#F87171', '#60A5FA', '#34D399', '#FBBF24', '#A78BFA', '#F472B6', '#38BDF8'];
@@ -14,15 +16,17 @@ const CLASS_COLORS = ['#F87171', '#60A5FA', '#34D399', '#FBBF24', '#A78BFA', '#F
 })
 export class ClassManagerService {
   classes = signal<ClassItem[]>([
-    { id: 'class-1', name: 'Class 1', samples: [], color: CLASS_COLORS[0] },
-    { id: 'class-2', name: 'Class 2', samples: [], color: CLASS_COLORS[1] }
+    { id: 'class-1', name: 'Class 1', samples: [], color: CLASS_COLORS[0], trainedCount: 0 },
+    { id: 'class-2', name: 'Class 2', samples: [], color: CLASS_COLORS[1], trainedCount: 0 }
   ]);
+
+  constructor(private mlService: MlService) {}
 
   addClass() {
     const current = this.classes();
     const newId = `class-${current.length + 1}`;
     const color = CLASS_COLORS[current.length % CLASS_COLORS.length];
-    this.classes.set([...current, { id: newId, name: `Class ${current.length + 1}`, samples: [], color }]);
+    this.classes.set([...current, { id: newId, name: `Class ${current.length + 1}`, samples: [], color, trainedCount: 0 }]);
   }
 
   getClassColorByName(name: string): string {
@@ -35,7 +39,13 @@ export class ClassManagerService {
   }
 
   updateClassName(id: string, newName: string) {
-    this.classes.set(this.classes().map(c => c.id === id ? { ...c, name: newName } : c));
+    const current = this.classes();
+    const cls = current.find(c => c.id === id);
+    if (cls && cls.name !== newName) {
+      const oldName = cls.name;
+      this.classes.set(current.map(c => c.id === id ? { ...c, name: newName } : c));
+      this.mlService.renameClass(oldName, newName);
+    }
   }
 
   addSample(classId: string, sampleBase64: string) {

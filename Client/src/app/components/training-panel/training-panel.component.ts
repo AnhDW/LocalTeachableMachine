@@ -1,4 +1,4 @@
-import { Component, OnDestroy } from '@angular/core';
+import { Component, OnDestroy, effect } from '@angular/core';
 import { CommonModule, KeyValuePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MlService } from '../../core/ml.service';
@@ -21,22 +21,52 @@ export class TrainingPanelComponent implements OnDestroy {
     public mlService: MlService,
     public webcamService: WebcamService,
     public classManager: ClassManagerService
-  ) {}
+  ) {
+    effect(() => {
+      // Tự động bật prediction loop nếu model đã trained (do import hoặc train xong)
+      if (this.mlService.isTrained()) {
+        this.startPredicting();
+      } else {
+        if (this.predictLoopId) {
+          cancelAnimationFrame(this.predictLoopId);
+        }
+      }
+    });
+  }
 
   async train() {
-    // Basic validation
     const classes = this.classManager.classes();
     if (classes.length < 2) {
-      alert("Please add at least 2 classes.");
-      return;
-    }
-    const emptyClasses = classes.filter(c => c.samples.length === 0);
-    if (emptyClasses.length > 0) {
-      alert("All classes must have at least one sample.");
+      alert("Cần tạo ít nhất 2 nhãn (classes).");
       return;
     }
     
-    await this.mlService.train(classes);
+    // Nếu model đã có sẵn (do import hoặc train trước đó), ta học cộng dồn (incremental = !clearPrevious)
+    const isIncremental = this.mlService.isTrained();
+    
+    // Kiểm tra xem có dữ liệu mới để train không
+    const hasNewData = classes.some(c => c.samples.length > (c.trainedCount || 0));
+    
+    if (isIncremental && !hasNewData) {
+      alert("Không có ảnh mới nào để học thêm!");
+      return;
+    }
+
+    if (!isIncremental) {
+      const emptyClasses = classes.filter(c => c.samples.length === 0);
+      if (emptyClasses.length > 0) {
+        alert("Mỗi nhãn phải có ít nhất 1 ảnh để học!");
+        return;
+      }
+    }
+    
+    await this.mlService.train(classes, !isIncremental);
+    
+    // Cập nhật lại số lượng ảnh đã học cho mỗi class
+    this.classManager.classes.set(
+      classes.map(c => ({...c, trainedCount: c.samples.length}))
+    );
+    
     this.startPredicting();
   }
 

@@ -44,7 +44,7 @@ export class MlService {
     });
   }
 
-  async train(classes: {id: string, name: string, samples: string[]}[]) {
+  async train(classes: {id: string, name: string, samples: string[], trainedCount?: number}[], clearPrevious: boolean = true) {
     if (!this.classifier || !this.mobilenetModel) return;
     
     this.isTraining.set(true);
@@ -52,14 +52,19 @@ export class MlService {
     // Slight delay to allow UI to update to "Training..." state
     await new Promise(resolve => setTimeout(resolve, 100));
     
-    this.classifier.clearAllClasses();
-    this.smoothedConfidences = {};
+    if (clearPrevious) {
+      this.classifier.clearAllClasses();
+      this.smoothedConfidences = {};
+    }
 
     let frameCount = 0;
     for (const cls of classes) {
-      if (cls.samples.length === 0) continue;
+      const startIndex = clearPrevious ? 0 : (cls.trainedCount || 0);
+      const newSamples = cls.samples.slice(startIndex);
       
-      for (const sampleBase64 of cls.samples) {
+      if (newSamples.length === 0) continue;
+      
+      for (const sampleBase64 of newSamples) {
         const img = await this.base64ToImage(sampleBase64);
         const activation = this.mobilenetModel.infer(img, true);
         this.classifier.addExample(activation, cls.name);
@@ -67,7 +72,6 @@ export class MlService {
         
         frameCount++;
         if (frameCount % 10 === 0) {
-          // Nhường quyền cho browser render mỗi 10 ảnh để tối ưu tốc độ mà không làm đơ UI
           await tf.nextFrame();
         }
       }
@@ -85,11 +89,13 @@ export class MlService {
       const result = await this.classifier.predictClass(activation, this.kValue());
       
       // Apply Exponential Moving Average (EMA) for smoother bar transitions
+      const newConfidences: {[label: string]: number} = {};
       Object.keys(result.confidences).forEach(label => {
         const current = this.smoothedConfidences[label] || 0;
-        this.smoothedConfidences[label] = current * (1 - this.SMOOTHING_FACTOR) + result.confidences[label] * this.SMOOTHING_FACTOR;
+        newConfidences[label] = current * (1 - this.SMOOTHING_FACTOR) + result.confidences[label] * this.SMOOTHING_FACTOR;
       });
-
+      this.smoothedConfidences = newConfidences;
+      
       // Recalculate top label based on smoothed confidences
       let bestLabel = result.label;
       let maxConf = -1;
@@ -99,7 +105,7 @@ export class MlService {
           bestLabel = lbl;
         }
       }
-      
+
       this.predictions.set({
         label: bestLabel,
         confidences: { ...this.smoothedConfidences }
@@ -116,12 +122,15 @@ export class MlService {
       const activation = this.mobilenetModel.infer(imageElement, true);
       const result = await this.classifier.predictClass(activation, this.kValue());
       
-      // Also apply smoothing here so UI stays consistent
+      // Apply Exponential Moving Average (EMA) for smoother bar transitions
+      const newConfidences: {[label: string]: number} = {};
       Object.keys(result.confidences).forEach(label => {
         const current = this.smoothedConfidences[label] || 0;
-        this.smoothedConfidences[label] = current * (1 - this.SMOOTHING_FACTOR) + result.confidences[label] * this.SMOOTHING_FACTOR;
+        newConfidences[label] = current * (1 - this.SMOOTHING_FACTOR) + result.confidences[label] * this.SMOOTHING_FACTOR;
       });
-      
+      this.smoothedConfidences = newConfidences;
+
+      // Recalculate top label based on smoothed confidences
       let bestLabel = result.label;
       let maxConf = -1;
       for (const [lbl, conf] of Object.entries(this.smoothedConfidences)) {
@@ -130,7 +139,7 @@ export class MlService {
           bestLabel = lbl;
         }
       }
-
+      
       this.predictions.set({
         label: bestLabel,
         confidences: { ...this.smoothedConfidences }
@@ -173,6 +182,22 @@ export class MlService {
       this.smoothedConfidences = {};
     } catch (e) {
       console.error("Failed to import model", e);
+    }
+  }
+
+  renameClass(oldName: string, newName: string) {
+    if (!this.classifier || !this.isTrained()) return;
+    
+    // getClassifierDataset returns {[label: string]: tf.Tensor2D}
+    const dataset = this.classifier.getClassifierDataset();
+    
+    if (dataset[oldName]) {
+      // Transfer the tensors to the new name
+      dataset[newName] = dataset[oldName];
+      delete dataset[oldName];
+      
+      // Update the classifier with the new dataset
+      this.classifier.setClassifierDataset(dataset);
     }
   }
 }
