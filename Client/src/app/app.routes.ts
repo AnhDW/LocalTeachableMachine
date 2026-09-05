@@ -4,8 +4,8 @@ import { ImageProjectComponent } from './pages/image-project/image-project.compo
 import { HandProjectComponent } from './pages/hand-project/hand-project.component';
 
 export const routes: Routes = [
-  { path: '', component: HubComponent },
-  { path: 'image', component: ImageProjectComponent },
-  { path: 'hand', component: HandProjectComponent },
+  { path: '', component: HubComponent, title: 'Teachable Machine Hub' },
+  { path: 'image', component: ImageProjectComponent, title: 'Image Project | TM' },
+  { path: 'hand', component: HandProjectComponent, title: 'Hand Project | TM' },
   { path: '**', redirectTo: '' }
 ];
