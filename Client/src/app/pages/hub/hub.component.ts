@@ -53,8 +53,32 @@ import { RouterLink } from '@angular/router';
               </svg>
             </div>
             <div class="p-6">
-              <h3 class="text-xl font-bold text-gray-800 mb-2">Hand Project</h3>
-              <p class="text-gray-600 text-sm">Dạy máy học nhận diện 21 điểm khớp trên bàn tay và các thủ ngữ.</p>
+              <h3 class="text-xl font-bold text-gray-800 mb-2">Hand Project (1 Hand)</h3>
+              <p class="text-gray-600 text-sm">Dạy máy học nhận diện điểm khớp trên 1 bàn tay (nhanh, nhẹ).</p>
+            </div>
+          </a>
+
+          <!-- Multi-Hand Project -->
+          <a routerLink="/multi-hand" class="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-lg hover:border-indigo-400 transition-all cursor-pointer flex flex-col overflow-hidden group">
+            <div class="h-48 bg-indigo-50 flex items-center justify-center">
+              <svg class="w-20 h-20 text-indigo-500 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+              </svg>
+            </div>
+            <div class="p-6">
+              <h3 class="text-xl font-bold text-gray-800 mb-2">Hand Project (2 Hands)</h3>
+              <p class="text-gray-600 text-sm">Dạy máy học nhận diện cùng lúc 2 bàn tay (hỗ trợ Game Toán).</p>
+            </div>
+          </a>
+
+          <!-- Math Game Project -->
+          <a routerLink="/math-game" class="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-lg hover:border-purple-400 transition-all cursor-pointer flex flex-col overflow-hidden group">
+            <div class="h-48 bg-purple-50 flex items-center justify-center">
+              <div class="text-6xl font-black text-purple-500 group-hover:scale-110 transition-transform">+ -</div>
+            </div>
+            <div class="p-6">
+              <h3 class="text-xl font-bold text-gray-800 mb-2">Math Game (2 Hands)</h3>
+              <p class="text-gray-600 text-sm">Trò chơi tính toán toán học nhận diện kết quả thông qua 2 bàn tay.</p>
             </div>
           </a>
         </div>
