@@ -81,6 +81,17 @@ import { RouterLink } from '@angular/router';
               <p class="text-gray-600 text-sm">Trò chơi tính toán toán học nhận diện kết quả thông qua 2 bàn tay.</p>
             </div>
           </a>
+
+          <!-- Racing Game Project -->
+          <a routerLink="/racing-game" class="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-lg hover:border-red-400 transition-all cursor-pointer flex flex-col overflow-hidden group">
+            <div class="h-48 bg-red-50 flex items-center justify-center">
+              <div class="text-6xl font-black text-red-500 group-hover:scale-110 transition-transform drop-shadow-md">🏎️</div>
+            </div>
+            <div class="p-6">
+              <h3 class="text-xl font-bold text-gray-800 mb-2">Racing Game (AI)</h3>
+              <p class="text-gray-600 text-sm">Game đua xe địa hình điều khiển tốc độ và bẻ lái bằng cử chỉ tay.</p>
+            </div>
+          </a>
         </div>
       </main>
     </div>

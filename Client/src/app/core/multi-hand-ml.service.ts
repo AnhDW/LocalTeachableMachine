@@ -109,49 +109,56 @@ export class MultiHandMlService {
       this.smoothedConfidences = {};
     }
 
-    let frameCount = 0;
-    for (const cls of classes) {
-      const startIndex = clearPrevious ? 0 : (cls.trainedCount || 0);
-      const newSamples = cls.samples.slice(startIndex);
-      
-      if (newSamples.length === 0) continue;
-      
-      for (const sampleBase64 of newSamples) {
-        const img = await this.base64ToImage(sampleBase64);
+    try {
+      let frameCount = 0;
+      for (const cls of classes) {
+        const startIndex = clearPrevious ? 0 : (cls.trainedCount || 0);
+        const newSamples = cls.samples.slice(startIndex);
         
-        // Train phải gọi trực tiếp để xử lý ảnh tĩnh
-        const hands = await this.safeEstimateHands(img);
+        if (newSamples.length === 0) continue;
         
-        const features = this.getHandKeypoints(hands);
-        if (features) {
-          const tensor = tf.tensor1d(features);
-          this.classifier.addExample(tensor, cls.name);
-          tensor.dispose();
-        }
-        
-        frameCount++;
-        if (frameCount % 10 === 0) {
-          await tf.nextFrame();
+        for (const sampleBase64 of newSamples) {
+          const img = await this.base64ToImage(sampleBase64);
+          
+          const hands = await this.safeEstimateHands(img);
+          
+          const features = this.getHandKeypoints(hands);
+          if (features) {
+            const tensor = tf.tensor1d(features);
+            this.classifier.addExample(tensor, cls.name);
+            tensor.dispose();
+          }
+          
+          frameCount++;
+          if (frameCount % 10 === 0) {
+            await tf.nextFrame();
+          }
         }
       }
+    } catch (e) {
+      console.error("Training failed:", e);
+      alert("Quá trình Train gặp lỗi. Vui lòng thử lại!");
+    } finally {
+      // Bật lại camera sau khi train xong
+      if (wasRunning && this.currentVideoElement) {
+        this.startInference(this.currentVideoElement);
+      }
+      
+      this.isTraining.set(false);
+      this.isTrained.set(true);
     }
-    
-    // Bật lại camera sau khi train xong
-    if (wasRunning && this.currentVideoElement) {
-      this.startInference(this.currentVideoElement);
-    }
-    
-    this.isTraining.set(false);
-    this.isTrained.set(true);
   }
 
   private inferenceLoopId: any = null;
   private currentVideoElement: HTMLVideoElement | null = null;
+  private isLoopRunning = false;
 
   public startInference(videoElement: HTMLVideoElement) {
     this.currentVideoElement = videoElement;
-    if (this.inferenceLoopId) return;
+    if (this.isLoopRunning) return;
+    this.isLoopRunning = true;
     const loop = async () => {
+      if (!this.isLoopRunning) return;
       if (this.detector && videoElement.readyState >= 2) {
         try {
           // Bypass safeEstimateHands lock for background loop so it doesn't block train() if it's running
@@ -166,12 +173,15 @@ export class MultiHandMlService {
           console.error("Inference error:", e);
         }
       }
-      this.inferenceLoopId = setTimeout(() => requestAnimationFrame(loop), 33); // ~30 FPS
+      if (this.isLoopRunning) {
+        this.inferenceLoopId = setTimeout(() => requestAnimationFrame(loop), 33); // ~30 FPS
+      }
     };
     loop();
   }
 
   public stopInference() {
+    this.isLoopRunning = false;
     if (this.inferenceLoopId) {
       clearTimeout(this.inferenceLoopId);
       this.inferenceLoopId = null;

@@ -9,5 +9,6 @@ export const routes: Routes = [
   { path: 'hand', component: HandProjectComponent, title: 'Hand Project | TM' },
   { path: 'multi-hand', loadComponent: () => import('./pages/multi-hand-project/multi-hand-project.component').then(m => m.MultiHandProjectComponent), title: 'Hand Project (2 Hands) | TM' },
   { path: 'math-game', loadComponent: () => import('./pages/math-game-project/math-game-project.component').then(m => m.MathGameProjectComponent), title: 'Math Game | TM' },
+  { path: 'racing-game', loadComponent: () => import('./pages/racing-game-project/racing-game-project.component').then(m => m.RacingGameProjectComponent), title: 'Racing Game | TM' }, 
   { path: '**', redirectTo: '' }
 ];

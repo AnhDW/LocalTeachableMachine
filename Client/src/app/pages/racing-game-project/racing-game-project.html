@@ -1,0 +1,149 @@
+<div class="min-h-screen bg-gray-50 text-gray-800 font-sans">
+  <header class="bg-white shadow-sm border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+    <div class="flex items-center gap-4">
+      <a routerLink="/" class="text-gray-500 hover:text-blue-600 transition-colors flex items-center gap-1 cursor-pointer">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+        <span class="font-medium">Hub</span>
+      </a>
+      <div class="h-6 w-px bg-gray-300"></div>
+      <div class="flex items-center gap-2">
+        <div class="w-8 h-8 bg-red-500 rounded flex items-center justify-center text-white font-bold text-xl">R</div>
+        <h1 class="text-xl font-medium text-gray-700">Racing Game (AI Gestures)</h1>
+      </div>
+    </div>
+    <div class="flex items-center gap-3">
+      <input type="file" #fileInput (change)="onFileSelected($event)" accept=".tmproj,.json" class="hidden" />
+      <button (click)="fileInput.click()" class="px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-md border border-gray-300 bg-white shadow-sm">Import Model (.tmproj)</button>
+      
+      @if (!gameMode) {
+        <button (click)="startGame()" [disabled]="!mlService.isTrained() || importedClasses.length < 2" class="px-6 py-2 text-sm font-bold text-white bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-md shadow-sm transition-colors">Start Game</button>
+      } @else {
+        <button (click)="stopGame()" class="px-6 py-2 text-sm font-bold text-white bg-red-600 hover:bg-red-700 rounded-md shadow-sm transition-colors">Stop Game</button>
+      }
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto p-6 h-[calc(100vh-73px)]">
+    
+    <!-- MÀN HÌNH CHỜ (Standby & Mapping) -->
+    @if (!gameMode) {
+      <div class="flex flex-col items-center justify-center h-full max-w-2xl mx-auto text-center">
+        <div class="text-6xl mb-6 drop-shadow-md">🏎️ 💨</div>
+        <h2 class="text-3xl font-black text-gray-800 mb-4">AI Racing Game</h2>
+        <p class="text-gray-500 mb-8">Trò chơi đua xe tốc độ cao, điều khiển bằng cử chỉ của bạn. Hãy nạp file <b>.tmproj</b> và gán các cử chỉ để bắt đầu.</p>
+        
+        @if (importedClasses.length === 0) {
+          <div class="bg-blue-50 border border-blue-200 text-blue-700 px-6 py-4 rounded-xl flex items-center gap-3">
+            <svg class="w-6 h-6 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"></path></svg>
+            <span class="font-medium">Chưa có dữ liệu. Vui lòng nhấn "Import Model" ở góc trên bên phải.</span>
+          </div>
+        } @else {
+          <!-- MAPPING UI -->
+          <div class="bg-white p-6 rounded-2xl shadow-lg border border-gray-100 w-full mb-8 text-left">
+            <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+              <svg class="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
+              Gán Cử Chỉ (Mapping)
+            </h3>
+            
+            <div class="grid grid-cols-2 gap-6">
+              <!-- Left -->
+              <div class="flex flex-col gap-1">
+                <label class="text-sm font-bold text-gray-600">Rẽ Trái ⬅️ <span class="text-red-500">*</span></label>
+                <select [(ngModel)]="mapLeft" class="form-select w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2.5">
+                  <option value="">(Không chọn)</option>
+                  @for (c of importedClasses; track c.name) {
+                    <option [value]="c.name">{{c.name}}</option>
+                  }
+                </select>
+              </div>
+              <!-- Right -->
+              <div class="flex flex-col gap-1">
+                <label class="text-sm font-bold text-gray-600">Rẽ Phải ➡️ <span class="text-red-500">*</span></label>
+                <select [(ngModel)]="mapRight" class="form-select w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2.5">
+                  <option value="">(Không chọn)</option>
+                  @for (c of importedClasses; track c.name) {
+                    <option [value]="c.name">{{c.name}}</option>
+                  }
+                </select>
+              </div>
+              <!-- Gas -->
+              <div class="flex flex-col gap-1">
+                <label class="text-sm font-bold text-gray-600">Tăng Tốc 🚀 (Tùy chọn)</label>
+                <select [(ngModel)]="mapGas" class="form-select w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2.5">
+                  <option value="">(Không chọn)</option>
+                  @for (c of importedClasses; track c.name) {
+                    <option [value]="c.name">{{c.name}}</option>
+                  }
+                </select>
+              </div>
+              <!-- Brake -->
+              <div class="flex flex-col gap-1">
+                <label class="text-sm font-bold text-gray-600">Phanh 🛑 (Tùy chọn)</label>
+                <select [(ngModel)]="mapBrake" class="form-select w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2.5">
+                  <option value="">(Không chọn)</option>
+                  @for (c of importedClasses; track c.name) {
+                    <option [value]="c.name">{{c.name}}</option>
+                  }
+                </select>
+              </div>
+            </div>
+            
+          </div>
+          
+          <button (click)="startGame()" class="bg-indigo-600 text-white px-8 py-4 rounded-xl font-black text-xl hover:bg-indigo-700 transition-colors shadow-lg">
+            SẴN SÀNG ĐUA!
+          </button>
+        }
+      </div>
+    }
+
+    <!-- GAME MÀN HÌNH CHÍNH -->
+    <div [class.hidden]="!gameMode" class="w-full h-full flex gap-6 relative">
+      
+      <!-- Cột trái: Webcam & Prediction -->
+      <div class="w-80 flex flex-col gap-4">
+        <!-- Score Card -->
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+          <p class="text-gray-500 font-bold uppercase tracking-wider text-sm mb-1">Điểm số (Score)</p>
+          <p class="text-5xl font-black text-indigo-600">{{score}}</p>
+          
+          <div class="mt-4 pt-4 border-t border-gray-100 flex justify-between items-center">
+            <span class="text-gray-500 text-sm font-medium">Hành động:</span>
+            <span class="px-3 py-1 bg-gray-100 text-gray-800 font-bold rounded uppercase text-sm">
+              {{ currentAction }}
+            </span>
+          </div>
+          <div class="mt-2 flex justify-between items-center">
+            <span class="text-gray-500 text-sm font-medium">Tốc độ:</span>
+            <span class="text-gray-800 font-bold text-sm">
+              {{ currentSpeed | number:'1.0-0' }} km/h
+            </span>
+          </div>
+        </div>
+
+        <!-- Webcam (using existing multi-hand webcam) -->
+        <div class="rounded-2xl overflow-hidden shadow-sm border-2 border-gray-200 bg-black relative">
+          <app-multi-hand-webcam-panel></app-multi-hand-webcam-panel>
+          <div class="absolute bottom-2 left-1/2 -translate-x-1/2 bg-black/60 text-white px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap">
+            Current: {{ mlService.predictions()?.label || 'No Gesture' }}
+          </div>
+        </div>
+        
+        @if (gameOver) {
+          <button (click)="startGame()" class="w-full py-4 bg-indigo-600 text-white rounded-xl font-bold text-lg hover:bg-indigo-700 shadow-md">
+            CHƠI LẠI (PLAY AGAIN)
+          </button>
+        }
+      </div>
+
+      <!-- Cột phải: GAME CANVAS -->
+      <div class="flex-1 bg-gray-900 rounded-3xl overflow-hidden shadow-2xl relative border-4 border-gray-800 flex items-center justify-center">
+        <!-- Canvas for the game -->
+        <canvas #gameCanvas width="400" height="600" class="bg-gray-800 border-x-4 border-gray-700 shadow-2xl" style="height: 100%; object-fit: contain;"></canvas>
+        
+        <!-- Game Over overlay (HTML overlay instead of canvas text if we want, but handled in canvas for now) -->
+      </div>
+      
+    </div>
+  </main>
+</div>

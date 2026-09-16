@@ -82,6 +82,12 @@ export const GAME_TEMPLATE = `<!DOCTYPE html>
     <div class="flex-1 w-full max-w-4xl flex flex-col items-center justify-center mt-12 z-10">
       <div class="bg-white/10 backdrop-blur-2xl border border-white/20 px-16 py-8 rounded-[2.5rem] shadow-2xl w-full text-center relative overflow-hidden">
         <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-white/50 to-transparent"></div>
+        <div id="pauseIconContainer" style="display:none;" class="absolute top-4 left-4 flex flex-col items-center pointer-events-none transition-transform duration-300">
+          <div id="pauseIconShape" class="w-16 h-16 bg-white/20 backdrop-blur-md text-white rounded-full flex items-center justify-center text-3xl shadow-inner border border-white/30 transition-colors">
+            <span id="pauseIconText"></span>
+          </div>
+          <span class="text-xs text-white/80 mt-1 font-bold uppercase tracking-wider">Dừng</span>
+        </div>
         <h2 id="questionText" class="text-6xl md:text-8xl font-black text-white drop-shadow-[0_5px_15px_rgba(0,0,0,0.3)] tracking-tight"></h2>
       </div>
       
@@ -94,12 +100,26 @@ export const GAME_TEMPLATE = `<!DOCTYPE html>
         <p class="text-sm font-medium text-white/90">Hold gesture for 1.5 seconds to confirm answer</p>
       </div>
     </div>
+    
+    <!-- PAUSE OVERLAY -->
+    <div id="pauseOverlay" style="display:none;" class="absolute inset-0 z-[60] bg-black/40 backdrop-blur-sm flex items-center justify-center">
+      <div class="bg-white/10 border border-white/20 p-8 rounded-3xl shadow-2xl backdrop-blur-md flex flex-col items-center animate-pulse">
+        <span class="text-7xl mb-4">⏸️</span>
+        <h2 class="text-4xl font-black text-white drop-shadow-md">ĐANG TẠM DỪNG</h2>
+        <p class="text-white/80 mt-2 text-lg">Hạ tay xuống để tiếp tục</p>
+      </div>
+    </div>
   </div>
 
   <script>
     // --- INJECTED DATA ---
     const CLASSES = /* INJECT_CLASSES */;
     const MODEL_DATA = /* INJECT_MODEL_DATA */;
+    const MAP_PAUSE = /* INJECT_MAP_PAUSE */;
+    const MAP_OPT1 = /* INJECT_MAP_OPT1 */;
+    const MAP_OPT2 = /* INJECT_MAP_OPT2 */;
+    const MAP_OPT3 = /* INJECT_MAP_OPT3 */;
+    const MAP_OPT4 = /* INJECT_MAP_OPT4 */;
     // ---------------------
 
     let difficulty = 'easy';
@@ -133,6 +153,11 @@ export const GAME_TEMPLATE = `<!DOCTYPE html>
         document.getElementById('standbyScreen').style.display = 'none';
         document.getElementById('gameOverlay').style.display = 'flex';
         document.getElementById('diffBadge').innerText = difficulty.toUpperCase();
+        
+        if (MAP_PAUSE) {
+          document.getElementById('pauseIconContainer').style.display = 'flex';
+          document.getElementById('pauseIconText').innerText = MAP_PAUSE;
+        }
         
         score = 0;
         updateScore();
@@ -286,19 +311,18 @@ export const GAME_TEMPLATE = `<!DOCTYPE html>
       else if (operator === '-') currentExpectedAnswer = a - b;
       else if (operator === 'x') currentExpectedAnswer = a * b;
 
-      const optionCount = Math.min(4, CLASSES.length);
-      const availableClasses = [...CLASSES].sort(()=>0.5-Math.random()).slice(0, optionCount);
+      const availableClasses = [MAP_OPT1, MAP_OPT2, MAP_OPT3, MAP_OPT4];
       
       const values = [currentExpectedAnswer];
-      while(values.length < optionCount) {
+      while(values.length < 4) {
         const offset = Math.floor(Math.random() * 10) - 5;
         const f = currentExpectedAnswer + offset;
         if (f !== currentExpectedAnswer && f >= 0 && !values.includes(f)) values.push(f);
       }
       values.sort(()=>0.5-Math.random());
       
-      options = availableClasses.map((cls, i) => ({
-        label: cls.name,
+      options = availableClasses.map((clsName, i) => ({
+        label: clsName,
         value: values[i],
         progress: 0
       }));
@@ -333,27 +357,37 @@ export const GAME_TEMPLATE = `<!DOCTYPE html>
         const dt = time - lastTime;
         lastTime = time;
         if (dt < 200) {
-          let answered = false;
-          let changed = false;
-          options.forEach(opt => {
-            if (currentPrediction === opt.label) {
-              opt.progress += (dt / 1500) * 100;
-              changed = true;
-              if (opt.progress >= 100) {
-                answered = true;
-                if (opt.value === currentExpectedAnswer) score++;
-                else score = Math.max(0, score - 1);
-                updateScore();
-                nextQuestion();
-              }
-            } else {
-              if (opt.progress > 0) {
-                opt.progress = Math.max(0, opt.progress - (dt / 500) * 100);
+          if (MAP_PAUSE && currentPrediction === MAP_PAUSE) {
+            document.getElementById('pauseOverlay').style.display = 'flex';
+            document.getElementById('pauseIconContainer').classList.add('scale-110');
+            document.getElementById('pauseIconShape').classList.add('bg-yellow-500', 'border-yellow-300', 'shadow-[0_0_20px_rgba(234,179,8,0.5)]');
+          } else {
+            document.getElementById('pauseOverlay').style.display = 'none';
+            document.getElementById('pauseIconContainer').classList.remove('scale-110');
+            document.getElementById('pauseIconShape').classList.remove('bg-yellow-500', 'border-yellow-300', 'shadow-[0_0_20px_rgba(234,179,8,0.5)]');
+            
+            let answered = false;
+            let changed = false;
+            options.forEach(opt => {
+              if (currentPrediction === opt.label) {
+                opt.progress += (dt / 1500) * 100;
                 changed = true;
+                if (opt.progress >= 100) {
+                  answered = true;
+                  if (opt.value === currentExpectedAnswer) score++;
+                  else score = Math.max(0, score - 1);
+                  updateScore();
+                  nextQuestion();
+                }
+              } else {
+                if (opt.progress > 0) {
+                  opt.progress = Math.max(0, opt.progress - (dt / 500) * 100);
+                  changed = true;
+                }
               }
-            }
-          });
-          if (changed && !answered) renderOptions();
+            });
+            if (changed && !answered) renderOptions();
+          }
         }
         gameLoopId = requestAnimationFrame(loop);
       }

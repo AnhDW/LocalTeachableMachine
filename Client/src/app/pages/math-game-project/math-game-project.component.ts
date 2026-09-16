@@ -1,10 +1,10 @@
-import { Component, OnInit, OnDestroy, effect } from '@angular/core';
+import { Component, OnInit, OnDestroy, ElementRef, ViewChild, ChangeDetectorRef, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 import { MultiHandWebcamPanelComponent } from '../../components/multi-hand-webcam-panel/multi-hand-webcam-panel.component';
 import { MultiHandMlService } from '../../core/multi-hand-ml.service';
 import { WebcamService } from '../../core/webcam.service';
-import { FormsModule } from '@angular/forms';
 import { GAME_TEMPLATE } from './game-template';
 
 interface GameOption {
@@ -30,12 +30,21 @@ export class MathGameProjectComponent implements OnInit, OnDestroy {
   options: GameOption[] = [];
   importedClasses: {name: string, thumbnail: string | null}[] = [];
   
+  mapOpt1 = '';
+  mapOpt2 = '';
+  mapOpt3 = '';
+  mapOpt4 = '';
+  mapPause = '';
+  
+  isPaused = false;
+  
   predictLoopId: any;
   gameLoopId: any;
 
   constructor(
     public mlService: MultiHandMlService,
-    public webcamService: WebcamService
+    public webcamService: WebcamService,
+    private cdr: ChangeDetectorRef
   ) {
     effect(() => {
       if (this.mlService.isTrained() && !this.gameMode) {
@@ -77,6 +86,11 @@ export class MathGameProjectComponent implements OnInit, OnDestroy {
     let finalHtml = GAME_TEMPLATE;
     finalHtml = finalHtml.replace('/* INJECT_CLASSES */', classesStr);
     finalHtml = finalHtml.replace('/* INJECT_MODEL_DATA */', modelDataStr);
+    finalHtml = finalHtml.replace('/* INJECT_MAP_PAUSE */', JSON.stringify(this.mapPause));
+    finalHtml = finalHtml.replace('/* INJECT_MAP_OPT1 */', JSON.stringify(this.mapOpt1));
+    finalHtml = finalHtml.replace('/* INJECT_MAP_OPT2 */', JSON.stringify(this.mapOpt2));
+    finalHtml = finalHtml.replace('/* INJECT_MAP_OPT3 */', JSON.stringify(this.mapOpt3));
+    finalHtml = finalHtml.replace('/* INJECT_MAP_OPT4 */', JSON.stringify(this.mapOpt4));
     
     // Download file
     const blob = new Blob([finalHtml], { type: 'text/html' });
@@ -121,7 +135,15 @@ export class MathGameProjectComponent implements OnInit, OnDestroy {
             thumbnail: c.thumbnail || null
           }));
           
+          if (this.importedClasses.length >= 4) {
+            this.mapOpt1 = this.importedClasses[0].name;
+            this.mapOpt2 = this.importedClasses[1].name;
+            this.mapOpt3 = this.importedClasses[2].name;
+            this.mapOpt4 = this.importedClasses[3].name;
+          }
+          
           alert('Import Model thành công! Bạn có thể bắt đầu chơi Game.');
+          this.cdr.detectChanges();
         } catch (error) {
           console.error('Error parsing project file:', error);
           alert('Lỗi khi đọc file project!');
@@ -149,10 +171,26 @@ export class MathGameProjectComponent implements OnInit, OnDestroy {
       alert("Vui lòng Import Model trước khi chơi!");
       return;
     }
+    if (!this.mapOpt1 || !this.mapOpt2 || !this.mapOpt3 || !this.mapOpt4) {
+      alert("Bạn phải gán đủ 4 cử chỉ cho 4 ô đáp án!");
+      return;
+    }
+    
+    // Check for duplicates
+    const selectedOptions = [this.mapOpt1, this.mapOpt2, this.mapOpt3, this.mapOpt4];
+    if (new Set(selectedOptions).size !== 4) {
+      alert("Các cử chỉ gán cho 4 đáp án không được trùng lặp!");
+      return;
+    }
+    
     this.gameMode = true;
     this.score = 0;
+    this.isPaused = false;
     this.nextQuestion();
-    this.startGameLoop();
+    
+    setTimeout(() => {
+      this.startGameLoop();
+    }, 100);
   }
 
   stopGame() {
@@ -214,9 +252,8 @@ export class MathGameProjectComponent implements OnInit, OnDestroy {
     
     this.currentExpectedAnswer = expectedAnswer;
     
-    // Generate options based on available imported classes
-    const optionCount = Math.min(4, this.importedClasses.length);
-    const availableClasses = [...this.importedClasses].sort(() => 0.5 - Math.random()).slice(0, optionCount);
+    const availableClasses = [this.mapOpt1, this.mapOpt2, this.mapOpt3, this.mapOpt4];
+    const optionCount = 4;
     
     // Generate values
     const values = [expectedAnswer];
@@ -230,13 +267,16 @@ export class MathGameProjectComponent implements OnInit, OnDestroy {
     
     // Shuffle values
     values.sort(() => 0.5 - Math.random());
-    
-    this.options = availableClasses.map((cls, index) => ({
-      label: cls.name,
-      thumbnail: cls.thumbnail,
-      value: values[index],
-      progress: 0
-    }));
+    // Map to options
+    this.options = availableClasses.map((clsName, idx) => {
+      const clsObj = this.importedClasses.find(c => c.name === clsName);
+      return {
+        label: clsName,
+        thumbnail: clsObj?.thumbnail || null,
+        value: values[idx],
+        progress: 0
+      };
+    });
   }
 
   startGameLoop() {
@@ -257,28 +297,36 @@ export class MathGameProjectComponent implements OnInit, OnDestroy {
         
         const prediction = this.mlService.predictions();
         if (prediction) {
-          let answered = false;
+          const currentLabel = prediction.label;
           
-          for (const opt of this.options) {
-            if (prediction.label === opt.label) {
-              opt.progress += (deltaTime / 1500) * 100; // 1.5 seconds to fill
-              
-              if (opt.progress >= 100) {
-                answered = true;
-                // Evaluate answer
-                if (opt.value === this.currentExpectedAnswer) {
-                  this.score++;
-                } else {
-                  this.score = Math.max(0, this.score - 1);
+          if (this.mapPause && currentLabel === this.mapPause) {
+            this.isPaused = true;
+          } else {
+            this.isPaused = false;
+            let answered = false;
+            
+            for (const opt of this.options) {
+              if (prediction.label === opt.label) {
+                opt.progress += (deltaTime / 1500) * 100; // 1.5 seconds to fill
+                
+                if (opt.progress >= 100) {
+                  answered = true;
+                  // Evaluate answer
+                  if (opt.value === this.currentExpectedAnswer) {
+                    this.score++;
+                  } else {
+                    this.score = Math.max(0, this.score - 1);
+                  }
+                  this.nextQuestion();
+                  break;
                 }
-                this.nextQuestion();
-                break;
+              } else {
+                opt.progress = Math.max(0, opt.progress - (deltaTime / 500) * 100);
               }
-            } else {
-              opt.progress = Math.max(0, opt.progress - (deltaTime / 500) * 100);
             }
           }
         } else {
+          this.isPaused = false;
           // Drain all if no prediction
           this.options.forEach(opt => opt.progress = Math.max(0, opt.progress - (deltaTime / 500) * 100));
         }
