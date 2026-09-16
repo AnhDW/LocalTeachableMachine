@@ -314,9 +314,9 @@ export const GAME_TEMPLATE = `<!DOCTYPE html>
         const borderClass = isSelected ? 'border-white shadow-[0_0_40px_rgba(255,255,255,0.3)] bg-white/30 scale-105' : 'border-white/10 bg-white/10';
         
         grid.innerHTML += \`
-          <div id="opt-\${i}" class="relative overflow-hidden rounded-[2rem] backdrop-blur-xl border-2 flex flex-col items-center p-6 h-40 justify-center transition-all duration-300 transform \${borderClass}">
+          <div id="opt-\${i}" class="relative overflow-hidden rounded-[2rem] backdrop-blur-xl border-2 flex flex-col items-center p-6 h-48 justify-center transition-all duration-300 transform \${borderClass}">
             <div class="absolute top-4 left-4">
-              <div class="w-12 h-12 bg-white/20 backdrop-blur-md text-white rounded-full flex items-center justify-center text-2xl shadow-inner border border-white/30">\${opt.label}</div>
+              <div class="w-20 h-20 bg-white/20 backdrop-blur-md text-white rounded-full flex items-center justify-center text-4xl shadow-inner border border-white/30">\${opt.label}</div>
             </div>
             <div class="text-6xl md:text-7xl font-black text-white drop-shadow-md ml-12 transition-transform duration-200 \${isSelected?'scale-110':''} ">\${opt.value}</div>
             <div class="absolute bottom-0 left-0 w-full h-2 bg-black/20">
