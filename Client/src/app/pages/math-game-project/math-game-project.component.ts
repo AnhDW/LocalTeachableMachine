@@ -1,5 +1,6 @@
 import { Component, OnInit, OnDestroy, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { MultiHandWebcamPanelComponent } from '../../components/multi-hand-webcam-panel/multi-hand-webcam-panel.component';
 import { MultiHandMlService } from '../../core/multi-hand-ml.service';
 import { WebcamService } from '../../core/webcam.service';
@@ -16,7 +17,7 @@ interface GameOption {
 @Component({
   selector: 'app-math-game-project',
   standalone: true,
-  imports: [CommonModule, MultiHandWebcamPanelComponent, FormsModule],
+  imports: [CommonModule, RouterLink, MultiHandWebcamPanelComponent, FormsModule],
   templateUrl: './math-game-project.html',
 })
 export class MathGameProjectComponent implements OnInit, OnDestroy {
