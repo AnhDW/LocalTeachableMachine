@@ -1,10 +1,10 @@
 import { Component, OnInit, OnDestroy, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
 import { MultiHandWebcamPanelComponent } from '../../components/multi-hand-webcam-panel/multi-hand-webcam-panel.component';
-import { ClassManagerService } from '../../core/class-manager.service';
 import { MultiHandMlService } from '../../core/multi-hand-ml.service';
 import { WebcamService } from '../../core/webcam.service';
+import { FormsModule } from '@angular/forms';
+import { GAME_TEMPLATE } from './game-template';
 
 interface GameOption {
   label: string;
@@ -16,12 +16,13 @@ interface GameOption {
 @Component({
   selector: 'app-math-game-project',
   standalone: true,
-  imports: [CommonModule, RouterLink, MultiHandWebcamPanelComponent],
-  templateUrl: './math-game-project.html'
+  imports: [CommonModule, MultiHandWebcamPanelComponent, FormsModule],
+  templateUrl: './math-game-project.html',
 })
 export class MathGameProjectComponent implements OnInit, OnDestroy {
   gameMode = false;
   currentQuestion = '';
+  currentExpectedAnswer = -1;
   score = 0;
   difficulty: 'easy' | 'medium' | 'hard' = 'medium';
   
@@ -32,7 +33,6 @@ export class MathGameProjectComponent implements OnInit, OnDestroy {
   gameLoopId: any;
 
   constructor(
-    public classManager: ClassManagerService,
     public mlService: MultiHandMlService,
     public webcamService: WebcamService
   ) {
@@ -46,7 +46,7 @@ export class MathGameProjectComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
-    this.classManager.reset();
+    // No need to reset global class manager
   }
 
   ngOnDestroy() {
@@ -56,6 +56,37 @@ export class MathGameProjectComponent implements OnInit, OnDestroy {
 
   setDifficulty(level: 'easy' | 'medium' | 'hard') {
     this.difficulty = level;
+  }
+
+  exportStandaloneGame() {
+    if (!this.mlService.isTrained() || this.importedClasses.length === 0) {
+      alert("Vui lòng Import Model của bạn vào trước khi xuất Game!");
+      return;
+    }
+    
+    const modelDataStr = this.mlService.exportModel();
+    if (!modelDataStr) {
+      alert("Lỗi khi trích xuất Model.");
+      return;
+    }
+
+    const classesStr = JSON.stringify(this.importedClasses);
+    
+    // Inject data into template
+    let finalHtml = GAME_TEMPLATE;
+    finalHtml = finalHtml.replace('/* INJECT_CLASSES */', classesStr);
+    finalHtml = finalHtml.replace('/* INJECT_MODEL_DATA */', modelDataStr);
+    
+    // Download file
+    const blob = new Blob([finalHtml], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'MathGame.html';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   }
 
   onFileSelected(event: Event) {
@@ -81,7 +112,6 @@ export class MathGameProjectComponent implements OnInit, OnDestroy {
             return;
           }
 
-          this.classManager.classes.set(projectData.classes);
           this.mlService.importModel(projectData.modelData);
           
           // Store class data for options mapping
@@ -181,6 +211,8 @@ export class MathGameProjectComponent implements OnInit, OnDestroy {
     else if (operator === '-') expectedAnswer = a - b;
     else if (operator === 'x') expectedAnswer = a * b;
     
+    this.currentExpectedAnswer = expectedAnswer;
+    
     // Generate options based on available imported classes
     const optionCount = Math.min(4, this.importedClasses.length);
     const availableClasses = [...this.importedClasses].sort(() => 0.5 - Math.random()).slice(0, optionCount);
@@ -233,8 +265,7 @@ export class MathGameProjectComponent implements OnInit, OnDestroy {
               if (opt.progress >= 100) {
                 answered = true;
                 // Evaluate answer
-                const expectedValue = eval(this.currentQuestion.replace('=', '').replace('?', '').trim());
-                if (opt.value === expectedValue) {
+                if (opt.value === this.currentExpectedAnswer) {
                   this.score++;
                 } else {
                   this.score = Math.max(0, this.score - 1);
