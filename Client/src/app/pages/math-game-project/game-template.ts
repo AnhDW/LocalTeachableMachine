@@ -27,7 +27,7 @@ export const GAME_TEMPLATE = `<!DOCTYPE html>
 <body class="overflow-hidden bg-gray-50 m-0 p-0 font-sans">
   
   <!-- STANDBY SCREEN -->
-  <div id="standbyScreen" class="absolute inset-0 z-50 p-6 flex flex-col items-center justify-center gap-6 bg-gradient-to-br from-indigo-600 via-purple-600 to-fuchsia-600">
+  <div id="standbyScreen" class="absolute inset-0 z-50 p-6 flex flex-col items-center justify-center gap-6 bg-gradient-to-br from-slate-900 via-blue-800 to-sky-500">
     <div class="bg-white/10 backdrop-blur-2xl border border-white/20 p-8 rounded-3xl shadow-2xl max-w-2xl text-center text-white">
       <h1 class="text-4xl font-black mb-4">Math AI Game</h1>
       <p class="text-lg text-white/80 mb-6">Trò chơi Toán học tương tác bằng Trí tuệ nhân tạo! Game đã nạp sẵn Model cử chỉ tay của bạn.</p>
@@ -41,7 +41,7 @@ export const GAME_TEMPLATE = `<!DOCTYPE html>
         </div>
       </div>
       
-      <button id="startBtn" onclick="startGame()" class="bg-white text-indigo-600 px-8 py-4 rounded-full font-black text-xl hover:scale-105 transition-transform shadow-[0_0_20px_rgba(255,255,255,0.5)]">
+      <button id="startBtn" onclick="startGame()" class="bg-white text-blue-800 px-8 py-4 rounded-full font-black text-xl hover:scale-105 transition-transform shadow-[0_0_20px_rgba(255,255,255,0.5)]">
         START GAME
       </button>
       <p id="loadingMsg" class="mt-4 text-sm font-bold text-yellow-300 animate-pulse hidden">Đang khởi tạo AI Model (Cần mạng để tải thư viện), vui lòng đợi...</p>
@@ -49,64 +49,68 @@ export const GAME_TEMPLATE = `<!DOCTYPE html>
   </div>
 
   <!-- GAME OVERLAY -->
-  <div id="gameOverlay" class="absolute inset-0 z-40 p-6 flex flex-col pointer-events-none overflow-hidden justify-center items-center hidden">
-    <!-- BEAUTIFUL ANIMATED BACKGROUND -->
-    <div class="absolute inset-0 z-0 bg-gradient-to-br from-indigo-600 via-purple-600 to-fuchsia-600 animate-gradient-xy">
-      <div class="absolute top-10 left-10 w-72 h-72 bg-white/10 rounded-full blur-3xl mix-blend-overlay"></div>
-      <div class="absolute bottom-10 right-10 w-96 h-96 bg-blue-400/20 rounded-full blur-3xl mix-blend-overlay"></div>
+  <div id="gameOverlay" class="absolute inset-0 z-40 p-4 md:p-6 flex flex-col pointer-events-none overflow-hidden justify-between items-center hidden">
+    <!-- BEAUTIFUL ANIMATED BACKGROUND (Blue Theme) -->
+    <div class="absolute inset-0 z-0 bg-gradient-to-br from-slate-900 via-blue-800 to-sky-500 animate-gradient-xy">
+      <div class="absolute top-10 left-10 w-40 h-40 md:w-72 md:h-72 bg-white/10 rounded-full blur-3xl mix-blend-overlay"></div>
+      <div class="absolute bottom-10 right-10 w-56 h-56 md:w-96 md:h-96 bg-cyan-400/20 rounded-full blur-3xl mix-blend-overlay"></div>
     </div>
 
-    <!-- SCORE BADGE -->
-    <div class="absolute top-8 left-8 pointer-events-auto z-10">
-      <div class="bg-white/20 backdrop-blur-xl border border-white/30 px-6 py-2 rounded-full shadow-2xl flex items-center gap-4">
-        <span class="text-lg text-white/80 font-medium tracking-wider uppercase">Score</span>
-        <span id="scoreText" class="text-3xl font-black text-white drop-shadow-md">0</span>
-        <div class="w-px h-8 bg-white/20 mx-2"></div>
-        <span id="diffBadge" class="text-sm font-bold text-yellow-300 uppercase">EASY</span>
+    <!-- TOP: SCORE BADGE -->
+    <div class="w-full flex justify-start pointer-events-auto z-50">
+      <div class="bg-white/20 backdrop-blur-xl border border-white/30 px-3 md:px-6 py-1.5 md:py-2 rounded-full shadow-2xl flex items-center gap-2 md:gap-4">
+        <span class="text-xs md:text-lg text-white/80 font-medium tracking-wider uppercase hidden sm:inline">Score</span>
+        <span id="scoreText" class="text-xl md:text-3xl font-black text-white drop-shadow-md">0</span>
+        <div class="w-px h-6 md:h-8 bg-white/20 mx-1 md:mx-2"></div>
+        <span id="diffBadge" class="text-[10px] md:text-sm font-bold text-yellow-300 uppercase">EASY</span>
       </div>
     </div>
 
-    <!-- PIP WEBCAM -->
-    <div class="absolute bottom-8 right-8 pointer-events-auto group z-10">
-      <div class="w-56 rounded-2xl overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.4)] border-4 border-white/20 bg-black relative transition-transform duration-300 hover:scale-105 hover:border-white/40">
-        <video id="webcamVideo" class="w-full h-full object-cover transform -scale-x-100" playsinline></video>
-        <canvas id="overlayCanvas" class="absolute inset-0 w-full h-full transform -scale-x-100"></canvas>
-        <div class="absolute bottom-3 left-1/2 -translate-x-1/2 bg-black/50 backdrop-blur-md text-white px-4 py-1.5 rounded-full text-sm font-bold shadow-lg flex items-center gap-2 border border-white/10">
-          <span id="predDot" class="w-2 h-2 rounded-full bg-red-400"></span>
-          <span id="predLabel">No Gesture</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- MAIN GAME AREA -->
-    <div class="flex-1 w-full max-w-4xl flex flex-col items-center justify-center mt-12 z-10">
-      <div class="bg-white/10 backdrop-blur-2xl border border-white/20 px-16 py-8 rounded-[2.5rem] shadow-2xl w-full text-center relative overflow-hidden">
+    <!-- MIDDLE: MAIN GAME AREA -->
+    <div class="w-full max-w-4xl flex flex-col items-center justify-center pointer-events-none my-auto shrink-0 z-10 py-4">
+      <div class="bg-white/10 backdrop-blur-2xl border border-white/20 px-4 py-4 md:px-16 md:py-6 rounded-2xl md:rounded-[2rem] shadow-2xl w-full text-center relative overflow-hidden pointer-events-auto">
         <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-white/50 to-transparent"></div>
-        <div id="pauseIconContainer" style="display:none;" class="absolute top-4 left-4 flex flex-col items-center pointer-events-none transition-transform duration-300">
-          <div id="pauseIconShape" class="w-16 h-16 bg-white/20 backdrop-blur-md text-white rounded-full flex items-center justify-center text-3xl shadow-inner border border-white/30 transition-colors">
+        <div id="pauseIconContainer" style="display:none;" class="absolute top-2 left-2 md:top-4 md:left-4 flex flex-col items-center pointer-events-none transition-transform duration-300">
+          <div id="pauseIconShape" class="w-8 h-8 md:w-14 md:h-14 bg-white/20 backdrop-blur-md text-white rounded-full flex items-center justify-center text-sm md:text-2xl shadow-inner border border-white/30 transition-colors">
             <span id="pauseIconText"></span>
           </div>
-          <span class="text-xs text-white/80 mt-1 font-bold uppercase tracking-wider">Dừng</span>
+          <span class="text-[8px] md:text-[10px] text-white/80 mt-1 font-bold uppercase tracking-wider">Dừng</span>
         </div>
-        <h2 id="questionText" class="text-6xl md:text-8xl font-black text-white drop-shadow-[0_5px_15px_rgba(0,0,0,0.3)] tracking-tight"></h2>
+        <h2 id="questionText" class="text-4xl sm:text-5xl md:text-7xl font-black text-white drop-shadow-[0_5px_15px_rgba(0,0,0,0.3)] tracking-tight"></h2>
       </div>
       
-      <div id="optionsGrid" class="mt-10 grid grid-cols-2 gap-6 w-full pointer-events-auto">
+      <div id="optionsGrid" class="mt-4 md:mt-6 grid grid-cols-2 gap-3 md:gap-6 w-full pointer-events-auto px-2 md:px-0">
         <!-- Options generated via JS -->
       </div>
+    </div>
+    
+    <!-- BOTTOM: INSTRUCTION & PIP WEBCAM -->
+    <div class="w-full max-w-4xl flex justify-between items-end pointer-events-none z-50">
+      <!-- Instruction text -->
+      <div class="mb-2 md:mb-4 flex items-center gap-2 md:gap-3 bg-black/20 backdrop-blur-md px-3 md:px-5 py-1.5 md:py-2 rounded-full border border-white/10 shadow-lg pointer-events-auto">
+        <svg class="w-4 h-4 md:w-5 md:h-5 text-white/70 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+        <p class="text-[10px] md:text-xs font-medium text-white/90">Hold gesture to confirm</p>
+      </div>
       
-      <div class="mt-8 flex items-center gap-3 bg-black/20 backdrop-blur-md px-6 py-2.5 rounded-full border border-white/10 shadow-lg">
-        <svg class="w-5 h-5 text-white/70 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-        <p class="text-sm font-medium text-white/90">Hold gesture for 1.5 seconds to confirm answer</p>
+      <!-- PIP WEBCAM -->
+      <div class="pointer-events-auto group">
+        <div class="w-28 sm:w-36 md:w-56 aspect-[4/3] rounded-lg md:rounded-2xl overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.4)] border-2 md:border-4 border-white/20 bg-black relative transition-transform duration-300 hover:scale-105 hover:border-white/40 flex items-center justify-center">
+          <video id="webcamVideo" class="w-full h-full object-cover transform -scale-x-100" autoplay muted playsinline></video>
+          <canvas id="overlayCanvas" class="absolute inset-0 w-full h-full transform -scale-x-100 pointer-events-none"></canvas>
+          <div class="absolute bottom-1 md:bottom-2 left-1/2 -translate-x-1/2 bg-black/50 backdrop-blur-md text-white px-2 md:px-3 py-0.5 md:py-1 rounded-full text-[8px] md:text-xs font-bold shadow-lg flex items-center gap-1 md:gap-2 border border-white/10 w-max max-w-[90%] truncate">
+            <span id="predDot" class="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-red-400 shrink-0"></span>
+            <span id="predLabel">No Gesture</span>
+          </div>
+        </div>
       </div>
     </div>
     
     <!-- PAUSE OVERLAY -->
     <div id="pauseOverlay" style="display:none;" class="absolute inset-0 z-[60] bg-black/40 backdrop-blur-sm flex items-center justify-center">
-      <div class="bg-white/10 border border-white/20 p-8 rounded-3xl shadow-2xl backdrop-blur-md flex flex-col items-center animate-pulse">
-        <span class="text-7xl mb-4">⏸️</span>
-        <h2 class="text-4xl font-black text-white drop-shadow-md">ĐANG TẠM DỪNG</h2>
-        <p class="text-white/80 mt-2 text-lg">Hạ tay xuống để tiếp tục</p>
+      <div class="bg-white/10 border border-white/20 p-6 md:p-8 rounded-3xl shadow-2xl backdrop-blur-md flex flex-col items-center animate-pulse text-center">
+        <span class="text-5xl md:text-7xl mb-2 md:mb-4">⏸️</span>
+        <h2 class="text-2xl md:text-4xl font-black text-white drop-shadow-md">ĐANG TẠM DỪNG</h2>
+        <p class="text-white/80 mt-1 md:mt-2 text-sm md:text-lg">Hạ tay xuống để tiếp tục</p>
       </div>
     </div>
   </div>
@@ -144,14 +148,21 @@ export const GAME_TEMPLATE = `<!DOCTYPE html>
 
     async function startGame() {
       document.getElementById('startBtn').style.display = 'none';
-      document.getElementById('loadingMsg').style.display = 'block';
+      const loadingMsg = document.getElementById('loadingMsg');
+      loadingMsg.style.display = 'block';
+      loadingMsg.innerText = "Đang khởi tạo AI Model, vui lòng đợi...";
 
       try {
         await initAI();
+        
+        loadingMsg.innerText = "Vui lòng cho phép truy cập Camera ở thông báo của trình duyệt...";
         await setupWebcam();
         
         document.getElementById('standbyScreen').style.display = 'none';
-        document.getElementById('gameOverlay').style.display = 'flex';
+        const gameOverlay = document.getElementById('gameOverlay');
+        gameOverlay.classList.remove('hidden');
+        gameOverlay.style.display = 'flex';
+        
         document.getElementById('diffBadge').innerText = difficulty.toUpperCase();
         
         if (MAP_PAUSE) {
@@ -338,12 +349,12 @@ export const GAME_TEMPLATE = `<!DOCTYPE html>
         const borderClass = isSelected ? 'border-white shadow-[0_0_40px_rgba(255,255,255,0.3)] bg-white/30 scale-105' : 'border-white/10 bg-white/10';
         
         grid.innerHTML += \`
-          <div id="opt-\${i}" class="relative overflow-hidden rounded-[2rem] backdrop-blur-xl border-2 flex flex-col items-center p-6 h-48 justify-center transition-all duration-300 transform \${borderClass}">
-            <div class="absolute top-4 left-4">
-              <div class="w-20 h-20 bg-white/20 backdrop-blur-md text-white rounded-full flex items-center justify-center text-4xl shadow-inner border border-white/30">\${opt.label}</div>
+          <div id="opt-\${i}" class="relative overflow-hidden rounded-2xl md:rounded-[2rem] backdrop-blur-xl border-2 flex flex-col items-center p-2 md:p-4 h-20 md:h-32 justify-center transition-all duration-300 transform \${borderClass}">
+            <div class="absolute top-2 left-2 md:top-3 md:left-3">
+              <div class="w-6 h-6 md:w-12 md:h-12 bg-white/20 backdrop-blur-md text-white rounded-full flex items-center justify-center text-xs md:text-xl shadow-inner border border-white/30">\${opt.label}</div>
             </div>
-            <div class="text-6xl md:text-7xl font-black text-white drop-shadow-md ml-12 transition-transform duration-200 \${isSelected?'scale-110':''} ">\${opt.value}</div>
-            <div class="absolute bottom-0 left-0 w-full h-2 bg-black/20">
+            <div class="text-2xl sm:text-4xl md:text-6xl font-black text-white drop-shadow-md ml-6 md:ml-12 transition-transform duration-200 \${isSelected?'scale-110':''} ">\${opt.value}</div>
+            <div class="absolute bottom-0 left-0 w-full h-1.5 md:h-2 bg-black/20">
               <div class="h-full bg-gradient-to-r from-green-400 to-emerald-300 transition-all duration-75 ease-linear shadow-[0_0_10px_rgba(74,222,128,0.8)]" style="width: \${opt.progress}%"></div>
             </div>
           </div>

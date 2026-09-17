@@ -1,4 +1,4 @@
-import { Component, ViewChild, ElementRef, AfterViewInit, OnDestroy } from '@angular/core';
+import { Component, ViewChild, ElementRef, AfterViewInit, OnDestroy, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { WebcamService } from '../../core/webcam.service';
@@ -19,6 +19,7 @@ const FINGER_LOOKUP_INDICES: { [finger: string]: number[] } = {
   templateUrl: './multi-hand-webcam-panel.html',
 })
 export class MultiHandWebcamPanelComponent implements AfterViewInit, OnDestroy {
+  @Input() compactMode = false;
   @ViewChild('webcamVideo') webcamVideo!: ElementRef<HTMLVideoElement>;
   @ViewChild('overlayCanvas') overlayCanvas!: ElementRef<HTMLCanvasElement>;
   
@@ -30,14 +31,18 @@ export class MultiHandWebcamPanelComponent implements AfterViewInit, OnDestroy {
   ) {}
 
   ngAfterViewInit() {
+    if (this.webcamService.isWebcamOn() && this.webcamVideo) {
+      const attached = this.webcamService.attachToVideo(this.webcamVideo.nativeElement);
+      if (attached) {
+        this.multiHandMlService.startInference(this.webcamVideo.nativeElement);
+        this.startDrawingHands();
+      }
+    }
   }
 
   ngOnDestroy() {
     if (this.drawLoopId) cancelAnimationFrame(this.drawLoopId);
-    if (this.webcamService.isWebcamOn()) {
-      this.multiHandMlService.stopInference();
-      this.webcamService.stopWebcam();
-    }
+    // DO NOT stop the webcam service here, so it can be reused when switching views
   }
 
   async toggleWebcam() {

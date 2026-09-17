@@ -1,119 +1,122 @@
-<div class="min-h-screen bg-gray-50 text-gray-800 font-sans">
-  <header class="bg-white shadow-sm border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-    <div class="flex items-center gap-4">
+<div class="min-h-screen flex flex-col bg-gray-50 text-gray-800 font-sans">
+  <header class="bg-white shadow-sm border-b border-gray-200 px-4 md:px-6 py-4 flex flex-wrap items-center justify-between gap-4 sticky top-0 z-50">
+    <div class="flex items-center gap-2 md:gap-4">
       <a routerLink="/" class="text-gray-500 hover:text-blue-600 transition-colors flex items-center gap-1 cursor-pointer">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
-        <span class="font-medium">Hub</span>
+        <span class="font-medium hidden sm:inline">Hub</span>
       </a>
-      <div class="h-6 w-px bg-gray-300"></div>
+      <div class="h-6 w-px bg-gray-300 hidden sm:block"></div>
       <div class="flex items-center gap-2">
-        <div class="w-8 h-8 bg-purple-600 rounded flex items-center justify-center text-white font-bold text-xl">M</div>
-        <h1 class="text-xl font-medium text-gray-700">Math Calculation Game (Multiple Choice)</h1>
+        <div class="w-8 h-8 bg-purple-600 rounded flex items-center justify-center text-white font-bold text-lg md:text-xl shrink-0">M</div>
+        <h1 class="text-base md:text-xl font-medium text-gray-700 truncate">Math Game (AI)</h1>
       </div>
     </div>
-    <div class="flex items-center gap-3">
+    <div class="flex items-center gap-2 md:gap-3 w-full sm:w-auto justify-end">
       <input type="file" #fileInput (change)="onFileSelected($event)" accept=".tmproj,.json" class="hidden" />
-      <button (click)="fileInput.click()" class="px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-md border border-gray-300 bg-white shadow-sm">Import Model (.tmproj)</button>
+      <button (click)="fileInput.click()" class="px-3 md:px-4 py-2 text-xs md:text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-md border border-gray-300 bg-white shadow-sm whitespace-nowrap">Import Model</button>
       
       @if (!gameMode) {
-        <button (click)="exportStandaloneGame()" class="px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-md border border-gray-300 bg-white shadow-sm">Export Game (.html)</button>
-        <button (click)="startGame()" [disabled]="!mlService.isTrained()" class="px-6 py-2 text-sm font-bold text-white bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-md shadow-sm transition-colors">Start Game</button>
+        <button (click)="exportStandaloneGame()" class="px-3 md:px-4 py-2 text-xs md:text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-md border border-gray-300 bg-white shadow-sm whitespace-nowrap">Export Game</button>
+        <button (click)="startGame()" [disabled]="!mlService.isTrained()" class="px-4 md:px-6 py-2 text-xs md:text-sm font-bold text-white bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-md shadow-sm transition-colors whitespace-nowrap">Start Game</button>
       } @else {
-        <button (click)="stopGame()" class="px-6 py-2 text-sm font-bold text-white bg-red-600 hover:bg-red-700 rounded-md shadow-sm transition-colors">Stop Game</button>
+        <button (click)="stopGame()" class="px-4 md:px-6 py-2 text-xs md:text-sm font-bold text-white bg-red-600 hover:bg-red-700 rounded-md shadow-sm transition-colors whitespace-nowrap">Stop Game</button>
       }
     </div>
   </header>
 
-  <main class="p-6 grid grid-cols-12 gap-6 h-[calc(100vh-73px)] relative overflow-y-auto overflow-x-hidden">
+  <main class="flex-1 w-full p-4 md:p-6 flex flex-col relative overflow-y-auto overflow-x-hidden">
     
     <!-- GAME OVERLAY (Fullscreen when active) -->
     @if (gameMode) {
-      <!-- BEAUTIFUL ANIMATED BACKGROUND -->
-      <div class="absolute inset-0 z-0 bg-gradient-to-br from-indigo-600 via-purple-600 to-fuchsia-600">
+      <!-- BEAUTIFUL ANIMATED BACKGROUND (Blue Theme) -->
+      <div class="absolute inset-0 z-0 bg-gradient-to-br from-slate-900 via-blue-800 to-sky-500">
         <!-- Floating shapes for depth -->
-        <div class="absolute top-10 left-10 w-72 h-72 bg-white/10 rounded-full blur-3xl mix-blend-overlay"></div>
-        <div class="absolute bottom-10 right-10 w-96 h-96 bg-blue-400/20 rounded-full blur-3xl mix-blend-overlay"></div>
+        <div class="absolute top-10 left-10 w-40 h-40 md:w-72 md:h-72 bg-white/10 rounded-full blur-3xl mix-blend-overlay"></div>
+        <div class="absolute bottom-10 right-10 w-56 h-56 md:w-96 md:h-96 bg-cyan-400/20 rounded-full blur-3xl mix-blend-overlay"></div>
       </div>
 
-      <div class="absolute inset-0 z-50 p-6 flex flex-col pointer-events-none overflow-hidden justify-center items-center">
+      <div class="absolute inset-0 z-50 p-4 md:p-6 flex flex-col pointer-events-none overflow-hidden justify-between items-center">
         
-        <!-- SCORE BADGE (Top Left) -->
-        <div class="absolute top-8 left-8 pointer-events-auto">
-          <div class="bg-white/20 backdrop-blur-xl border border-white/30 px-6 py-2 rounded-full shadow-2xl flex items-center gap-4">
-            <span class="text-lg text-white/80 font-medium tracking-wider uppercase">Score</span>
-            <span class="text-3xl font-black text-white drop-shadow-md">{{ score }}</span>
-            <div class="w-px h-8 bg-white/20 mx-2"></div>
-            <span class="text-sm font-bold text-yellow-300 uppercase">{{ difficulty }}</span>
+        <!-- TOP: SCORE BADGE -->
+        <div class="w-full flex justify-start pointer-events-auto z-50">
+          <div class="bg-white/20 backdrop-blur-xl border border-white/30 px-3 md:px-6 py-1.5 md:py-2 rounded-full shadow-2xl flex items-center gap-2 md:gap-4">
+            <span class="text-xs md:text-lg text-white/80 font-medium tracking-wider uppercase hidden sm:inline">Score</span>
+            <span class="text-xl md:text-3xl font-black text-white drop-shadow-md">{{ score }}</span>
+            <div class="w-px h-6 md:h-8 bg-white/20 mx-1 md:mx-2"></div>
+            <span class="text-[10px] md:text-sm font-bold text-yellow-300 uppercase">{{ difficulty }}</span>
           </div>
         </div>
 
-        <!-- PIP WEBCAM (Bottom Right Floating) -->
-        <div class="absolute bottom-8 right-8 pointer-events-auto group">
-          <div class="w-56 rounded-2xl overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.4)] border-4 border-white/20 bg-black relative transition-transform duration-300 hover:scale-105 hover:border-white/40">
-             <app-multi-hand-webcam-panel></app-multi-hand-webcam-panel>
-             
-             <!-- AI Detection overlay inside PIP -->
-             <div class="absolute bottom-3 left-1/2 -translate-x-1/2 bg-black/50 backdrop-blur-md text-white px-4 py-1.5 rounded-full text-sm font-bold shadow-lg flex items-center gap-2 border border-white/10">
-                <span class="w-2 h-2 rounded-full" [class.bg-green-400]="mlService.predictions()?.label" [class.bg-red-400]="!mlService.predictions()?.label" [class.animate-pulse]="mlService.predictions()?.label"></span>
-                {{ mlService.predictions()?.label || 'No Gesture' }}
-             </div>
-          </div>
-        </div>
-
-        <!-- MAIN GAME AREA (Centered) -->
-        <div class="flex-1 w-full max-w-4xl flex flex-col items-center justify-center mt-12">
+        <!-- MIDDLE: MAIN GAME AREA -->
+        <div class="w-full max-w-4xl flex flex-col items-center justify-center pointer-events-none my-auto shrink-0 py-4">
           
-          <!-- Question Box (Glassmorphism) -->
-          <div class="bg-white/10 backdrop-blur-2xl border border-white/20 px-16 py-8 rounded-[2.5rem] shadow-2xl w-full text-center relative overflow-hidden">
+          <!-- Question Box -->
+          <div class="bg-white/10 backdrop-blur-2xl border border-white/20 px-4 py-4 md:px-16 md:py-6 rounded-2xl md:rounded-[2rem] shadow-2xl w-full text-center relative overflow-hidden pointer-events-auto">
             <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-white/50 to-transparent"></div>
             
             @if (mapPause) {
-              <div class="absolute top-4 left-4 flex flex-col items-center pointer-events-none transition-transform duration-300" [class.scale-110]="isPaused">
-                <div class="w-16 h-16 bg-white/20 backdrop-blur-md text-white rounded-full flex items-center justify-center text-3xl shadow-inner border border-white/30 transition-colors"
+              <div class="absolute top-2 left-2 md:top-4 md:left-4 flex flex-col items-center pointer-events-none transition-transform duration-300" [class.scale-110]="isPaused">
+                <div class="w-8 h-8 md:w-14 md:h-14 bg-white/20 backdrop-blur-md text-white rounded-full flex items-center justify-center text-sm md:text-2xl shadow-inner border border-white/30 transition-colors"
                      [class.bg-yellow-500]="isPaused" [class.border-yellow-300]="isPaused" [class.shadow-[0_0_20px_rgba(234,179,8,0.5)]]="isPaused">
                   {{ mapPause }}
                 </div>
-                <span class="text-xs text-white/80 mt-1 font-bold uppercase tracking-wider">Dừng</span>
+                <span class="text-[8px] md:text-[10px] text-white/80 mt-1 font-bold uppercase tracking-wider">Dừng</span>
               </div>
             }
 
-            <h2 class="text-6xl md:text-8xl font-black text-white drop-shadow-[0_5px_15px_rgba(0,0,0,0.3)] tracking-tight">
+            <h2 class="text-4xl sm:text-5xl md:text-7xl font-black text-white drop-shadow-[0_5px_15px_rgba(0,0,0,0.3)] tracking-tight">
               {{ currentQuestion }}
             </h2>
           </div>
           
           <!-- Options Grid -->
-          <div class="mt-10 grid grid-cols-2 gap-6 w-full pointer-events-auto">
+          <div class="mt-4 md:mt-6 grid grid-cols-2 gap-3 md:gap-6 w-full pointer-events-auto px-2 md:px-0">
             @for (opt of options; track opt.label) {
-              <div class="relative overflow-hidden rounded-[2rem] bg-white/10 backdrop-blur-xl border-2 border-white/10 shadow-xl flex flex-col items-center p-6 h-40 justify-center transition-all duration-300 transform"
+              <div class="relative overflow-hidden rounded-2xl md:rounded-[2rem] bg-white/10 backdrop-blur-xl border-2 border-white/10 shadow-xl flex flex-col items-center p-2 md:p-4 h-20 md:h-32 justify-center transition-all duration-300 transform"
                    [class.border-white]="mlService.predictions()?.label === opt.label"
                    [class.bg-white/30]="mlService.predictions()?.label === opt.label"
                    [class.scale-105]="mlService.predictions()?.label === opt.label"
                    [class.shadow-[0_0_40px_rgba(255,255,255,0.3)]]="mlService.predictions()?.label === opt.label">
                    
                 <!-- Emoji Icon -->
-                <div class="absolute top-4 left-4">
-                  <div class="w-20 h-20 bg-white/20 backdrop-blur-md text-white rounded-full flex items-center justify-center text-4xl shadow-inner border border-white/30">
+                <div class="absolute top-2 left-2 md:top-3 md:left-3">
+                  <div class="w-6 h-6 md:w-12 md:h-12 bg-white/20 backdrop-blur-md text-white rounded-full flex items-center justify-center text-xs md:text-xl shadow-inner border border-white/30">
                     {{ opt.label }}
                   </div>
                 </div>
 
                 <!-- Answer Value -->
-                <div class="text-6xl md:text-7xl font-black text-white drop-shadow-md ml-12 transition-transform duration-200" [class.scale-110]="mlService.predictions()?.label === opt.label">
+                <div class="text-2xl sm:text-4xl md:text-6xl font-black text-white drop-shadow-md ml-6 md:ml-12 transition-transform duration-200" [class.scale-110]="mlService.predictions()?.label === opt.label">
                   {{ opt.value }}
                 </div>
                 
                 <!-- Progress Bar -->
-                <div class="absolute bottom-0 left-0 w-full h-2 bg-black/20">
+                <div class="absolute bottom-0 left-0 w-full h-1.5 md:h-2 bg-black/20">
                   <div class="h-full bg-gradient-to-r from-green-400 to-emerald-300 transition-all duration-75 ease-linear shadow-[0_0_10px_rgba(74,222,128,0.8)]" [style.width.%]="opt.progress"></div>
                 </div>
               </div>
             }
           </div>
+        </div>
+
+        <!-- BOTTOM: INSTRUCTION & PIP WEBCAM -->
+        <div class="w-full max-w-4xl flex justify-between items-end pointer-events-none z-50">
+          <!-- Instruction text -->
+          <div class="mb-2 md:mb-4 flex items-center gap-2 md:gap-3 bg-black/20 backdrop-blur-md px-3 md:px-5 py-1.5 md:py-2 rounded-full border border-white/10 shadow-lg pointer-events-auto">
+            <svg class="w-4 h-4 md:w-5 md:h-5 text-white/70 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+            <p class="text-[10px] md:text-xs font-medium text-white/90">Hold gesture to confirm</p>
+          </div>
           
-          <div class="mt-8 flex items-center gap-3 bg-black/20 backdrop-blur-md px-6 py-2.5 rounded-full border border-white/10 shadow-lg">
-            <svg class="w-5 h-5 text-white/70 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-            <p class="text-sm font-medium text-white/90">Hold gesture for 1.5 seconds to confirm answer</p>
+          <!-- PIP WEBCAM -->
+          <div class="pointer-events-auto group">
+            <div class="w-28 sm:w-36 md:w-56 aspect-[4/3] rounded-lg md:rounded-2xl overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.4)] border-2 md:border-4 border-white/20 bg-black relative transition-transform duration-300 hover:scale-105 hover:border-white/40">
+               <app-multi-hand-webcam-panel [compactMode]="true"></app-multi-hand-webcam-panel>
+               
+               <div class="absolute bottom-1 md:bottom-2 left-1/2 -translate-x-1/2 bg-black/50 backdrop-blur-md text-white px-2 md:px-3 py-0.5 md:py-1 rounded-full text-[8px] md:text-xs font-bold shadow-lg flex items-center gap-1 md:gap-2 border border-white/10 w-max max-w-[90%] truncate">
+                  <span class="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full shrink-0" [class.bg-green-400]="mlService.predictions()?.label" [class.bg-red-400]="!mlService.predictions()?.label" [class.animate-pulse]="mlService.predictions()?.label"></span>
+                  {{ mlService.predictions()?.label || 'None' }}
+               </div>
+            </div>
           </div>
         </div>
       </div>
@@ -121,10 +124,10 @@
       <!-- PAUSE OVERLAY -->
       @if (isPaused) {
         <div class="absolute inset-0 z-[60] bg-black/40 backdrop-blur-sm flex items-center justify-center">
-          <div class="bg-white/10 border border-white/20 p-8 rounded-3xl shadow-2xl backdrop-blur-md flex flex-col items-center animate-pulse">
-            <span class="text-7xl mb-4">⏸️</span>
-            <h2 class="text-4xl font-black text-white drop-shadow-md">ĐANG TẠM DỪNG</h2>
-            <p class="text-white/80 mt-2 text-lg">Hạ tay xuống để tiếp tục</p>
+          <div class="bg-white/10 border border-white/20 p-6 md:p-8 rounded-3xl shadow-2xl backdrop-blur-md flex flex-col items-center animate-pulse text-center">
+            <span class="text-5xl md:text-7xl mb-2 md:mb-4">⏸️</span>
+            <h2 class="text-2xl md:text-4xl font-black text-white drop-shadow-md">ĐANG TẠM DỪNG</h2>
+            <p class="text-white/80 mt-1 md:mt-2 text-sm md:text-lg">Hạ tay xuống để tiếp tục</p>
           </div>
         </div>
       }
@@ -132,30 +135,30 @@
 
     <!-- STANDBY MODE -->
     @if (!gameMode) {
-      <div class="col-span-12 flex flex-col items-center justify-start gap-6 pb-20 pt-4">
-        <div class="bg-blue-50 border border-blue-200 text-blue-800 p-6 rounded-lg text-lg max-w-2xl text-center shadow-sm">
-          <strong>Chào mừng đến với Math Calculation Game (Trắc nghiệm)!</strong><br><br>
-          Game giờ hỗ trợ trắc nghiệm 4 đáp án. Hãy huấn luyện 4 cử chỉ (ví dụ: A, B, C, D) bằng <strong>Hand Project (2 Hands)</strong> và Export.<br><br>
+      <div class="flex-1 flex flex-col items-center justify-start gap-4 md:gap-6 pb-20 pt-4 w-full max-w-4xl mx-auto">
+        <div class="bg-blue-50 border border-blue-200 text-blue-800 p-4 md:p-6 rounded-lg text-sm md:text-lg w-full text-center shadow-sm">
+          <strong>Chào mừng đến với Math Calculation Game!</strong><br><br>
+          Game hỗ trợ trắc nghiệm 4 đáp án. Hãy huấn luyện 4 cử chỉ (ví dụ: A, B, C, D) bằng <strong>Hand Project (2 Hands)</strong> và Export.<br><br>
           Nhấn <strong>Import Model (.tmproj)</strong> để nạp bộ nhận diện. Hình ảnh cử chỉ sẽ tự động hiển thị cạnh đáp án giúp bạn thao tác dễ dàng!
         </div>
 
-        <div class="bg-white border border-gray-200 p-4 rounded-xl shadow-sm flex flex-col items-center gap-3">
-          <span class="font-bold text-gray-600 uppercase text-sm tracking-wider">Chọn độ khó</span>
-          <div class="flex gap-2">
+        <div class="bg-white border border-gray-200 p-4 rounded-xl shadow-sm flex flex-col items-center gap-3 w-full">
+          <span class="font-bold text-gray-600 uppercase text-xs md:text-sm tracking-wider">Chọn độ khó</span>
+          <div class="flex flex-wrap justify-center gap-2">
             <button (click)="setDifficulty('easy')" 
-                    class="px-6 py-2 rounded-lg font-bold transition-all"
+                    class="px-4 md:px-6 py-2 rounded-lg font-bold transition-all text-sm md:text-base"
                     [class.bg-green-500]="difficulty === 'easy'" [class.text-white]="difficulty === 'easy'"
                     [class.bg-gray-100]="difficulty !== 'easy'" [class.text-gray-500]="difficulty !== 'easy'">
               Dễ
             </button>
             <button (click)="setDifficulty('medium')" 
-                    class="px-6 py-2 rounded-lg font-bold transition-all"
+                    class="px-4 md:px-6 py-2 rounded-lg font-bold transition-all text-sm md:text-base"
                     [class.bg-yellow-500]="difficulty === 'medium'" [class.text-white]="difficulty === 'medium'"
                     [class.bg-gray-100]="difficulty !== 'medium'" [class.text-gray-500]="difficulty !== 'medium'">
               Vừa
             </button>
             <button (click)="setDifficulty('hard')" 
-                    class="px-6 py-2 rounded-lg font-bold transition-all"
+                    class="px-4 md:px-6 py-2 rounded-lg font-bold transition-all text-sm md:text-base"
                     [class.bg-red-500]="difficulty === 'hard'" [class.text-white]="difficulty === 'hard'"
                     [class.bg-gray-100]="difficulty !== 'hard'" [class.text-gray-500]="difficulty !== 'hard'">
               Khó
@@ -164,34 +167,34 @@
         </div>
 
         @if (importedClasses.length > 0) {
-          <div class="bg-white border border-gray-200 p-4 rounded-xl shadow-sm flex flex-col items-center gap-3 w-[500px] text-left">
-            <span class="font-bold text-gray-600 uppercase text-sm tracking-wider w-full text-center">Gán Cử Chỉ Cho Các Trạng Thái</span>
+          <div class="bg-white border border-gray-200 p-4 rounded-xl shadow-sm flex flex-col items-center gap-3 w-full text-left">
+            <span class="font-bold text-gray-600 uppercase text-xs md:text-sm tracking-wider w-full text-center">Gán Cử Chỉ Cho Các Trạng Thái</span>
             
-            <div class="grid grid-cols-2 gap-4 w-full">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
               <!-- Đáp án 1 -->
               <div class="flex flex-col gap-1">
-                <label class="text-sm font-bold text-gray-600">Đáp Án 1 (Góc trái trên)</label>
+                <label class="text-xs md:text-sm font-bold text-gray-600">Đáp Án 1 (Góc trái trên)</label>
                 <select [(ngModel)]="mapOpt1" class="form-select w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-indigo-500 p-2">
                   @for (c of importedClasses; track c.name) { <option [value]="c.name">{{c.name}}</option> }
                 </select>
               </div>
               <!-- Đáp án 2 -->
               <div class="flex flex-col gap-1">
-                <label class="text-sm font-bold text-gray-600">Đáp Án 2 (Góc phải trên)</label>
+                <label class="text-xs md:text-sm font-bold text-gray-600">Đáp Án 2 (Góc phải trên)</label>
                 <select [(ngModel)]="mapOpt2" class="form-select w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-indigo-500 p-2">
                   @for (c of importedClasses; track c.name) { <option [value]="c.name">{{c.name}}</option> }
                 </select>
               </div>
               <!-- Đáp án 3 -->
               <div class="flex flex-col gap-1">
-                <label class="text-sm font-bold text-gray-600">Đáp Án 3 (Góc trái dưới)</label>
+                <label class="text-xs md:text-sm font-bold text-gray-600">Đáp Án 3 (Góc trái dưới)</label>
                 <select [(ngModel)]="mapOpt3" class="form-select w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-indigo-500 p-2">
                   @for (c of importedClasses; track c.name) { <option [value]="c.name">{{c.name}}</option> }
                 </select>
               </div>
               <!-- Đáp án 4 -->
               <div class="flex flex-col gap-1">
-                <label class="text-sm font-bold text-gray-600">Đáp Án 4 (Góc phải dưới)</label>
+                <label class="text-xs md:text-sm font-bold text-gray-600">Đáp Án 4 (Góc phải dưới)</label>
                 <select [(ngModel)]="mapOpt4" class="form-select w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-indigo-500 p-2">
                   @for (c of importedClasses; track c.name) { <option [value]="c.name">{{c.name}}</option> }
                 </select>
@@ -201,8 +204,8 @@
             <div class="w-full h-px bg-gray-200 my-2"></div>
             
             <div class="flex flex-col gap-1 w-full">
-              <label class="text-sm font-bold text-gray-600">Cử chỉ Tạm Dừng (Pause) ✋</label>
-              <p class="text-xs text-gray-500 mb-1">Thời gian sẽ dừng lại để bạn rảnh tay suy nghĩ.</p>
+              <label class="text-xs md:text-sm font-bold text-gray-600">Cử chỉ Tạm Dừng (Pause) ✋</label>
+              <p class="text-[10px] md:text-xs text-gray-500 mb-1">Thời gian sẽ dừng lại để bạn rảnh tay suy nghĩ.</p>
               <select [(ngModel)]="mapPause" class="form-select w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-indigo-500 p-2">
                 <option value="">(Không dùng tính năng này)</option>
                 @for (c of importedClasses; track c.name) {
@@ -213,9 +216,9 @@
           </div>
         }
         
-        <div class="w-96 rounded-xl overflow-hidden shadow-lg border-4 border-white bg-black relative">
+        <div class="w-full max-w-[280px] sm:max-w-sm rounded-xl overflow-hidden shadow-lg border-2 md:border-4 border-white bg-black relative">
           <app-multi-hand-webcam-panel></app-multi-hand-webcam-panel>
-          <div class="absolute bottom-4 right-4 bg-white/90 text-blue-800 px-3 py-1 rounded-lg text-lg font-bold shadow-lg border border-gray-200">
+          <div class="absolute bottom-2 md:bottom-4 right-2 md:right-4 bg-white/90 text-blue-800 px-2 md:px-3 py-0.5 md:py-1 rounded-lg text-xs md:text-lg font-bold shadow-lg border border-gray-200">
             Detected: {{ mlService.predictions()?.label || 'None' }}
           </div>
         </div>

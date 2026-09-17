@@ -33,6 +33,17 @@ export class WebcamService {
     }
   }
 
+  attachToVideo(videoElement: HTMLVideoElement): boolean {
+    if (this.stream) {
+      this.videoElement = videoElement;
+      videoElement.srcObject = this.stream;
+      videoElement.play().catch(e => console.error("Error playing video:", e));
+      this.isWebcamOn.set(true);
+      return true;
+    }
+    return false;
+  }
+
   stopWebcam(): void {
     if (this.stream) {
       this.stream.getTracks().forEach(track => track.stop());

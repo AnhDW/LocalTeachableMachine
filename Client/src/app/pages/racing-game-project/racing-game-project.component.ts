@@ -159,7 +159,25 @@ export class RacingGameProjectComponent implements OnInit, OnDestroy {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
     
+    // Set internal resolution to match the CSS display size
+    const rect = canvas.parentElement?.getBoundingClientRect();
+    if (rect) {
+      canvas.width = rect.width;
+      canvas.height = rect.height;
+    } else {
+      canvas.width = canvas.clientWidth || 400;
+      canvas.height = canvas.clientHeight || 600;
+    }
+
+    this.carX = canvas.width / 2;
+    
     let frameCount = 0;
+    
+    // Scaling factors based on a base width of 400px
+    const scale = canvas.width / 400;
+    const carW = 40 * scale;
+    const carH = 60 * scale;
+    const speedScale = canvas.height / 600;
     
     const loop = () => {
       if (!this.gameMode || this.gameOver) return;
@@ -169,9 +187,9 @@ export class RacingGameProjectComponent implements OnInit, OnDestroy {
       
       // Action handling
       if (this.currentAction === 'left') {
-        this.carSpeedX = -6;
+        this.carSpeedX = -8 * scale;
       } else if (this.currentAction === 'right') {
-        this.carSpeedX = 6;
+        this.carSpeedX = 8 * scale;
       } else {
         this.carSpeedX = 0;
       }
@@ -188,16 +206,17 @@ export class RacingGameProjectComponent implements OnInit, OnDestroy {
       
       this.carX += this.carSpeedX;
       // Boundaries
-      if (this.carX < 30) this.carX = 30;
-      if (this.carX > canvas.width - 30) this.carX = canvas.width - 30;
+      if (this.carX < carW / 2 + 10) this.carX = carW / 2 + 10;
+      if (this.carX > canvas.width - (carW / 2 + 10)) this.carX = canvas.width - (carW / 2 + 10);
       
       // Spawn obstacles
-      if (frameCount % Math.max(20, Math.floor(60 - this.currentSpeed * 2)) === 0) {
+      const spawnRate = Math.max(15, Math.floor(60 - this.currentSpeed * 2));
+      if (frameCount % spawnRate === 0) {
         this.obstacles.push({
-          x: Math.random() * (canvas.width - 60) + 30,
-          y: -50,
-          width: 40 + Math.random() * 40,
-          height: 30 + Math.random() * 20,
+          x: Math.random() * (canvas.width - 80 * scale) + 40 * scale,
+          y: -100,
+          width: (40 + Math.random() * 40) * scale,
+          height: (30 + Math.random() * 20) * scale,
           color: ['#EF4444', '#F59E0B', '#10B981', '#3B82F6'][Math.floor(Math.random() * 4)]
         });
       }
@@ -205,10 +224,10 @@ export class RacingGameProjectComponent implements OnInit, OnDestroy {
       // Move obstacles and collision
       for (let i = this.obstacles.length - 1; i >= 0; i--) {
         const obs = this.obstacles[i];
-        obs.y += this.currentSpeed;
+        obs.y += this.currentSpeed * speedScale * 1.5;
         
-        // Car rect: x - 20, y: canvas.height - 80, width: 40, height: 60
-        const carRect = { x: this.carX - 20, y: canvas.height - 80, w: 40, h: 60 };
+        // Car rect
+        const carRect = { x: this.carX - carW / 2, y: canvas.height - carH - 20, w: carW, h: carH };
         
         // Collision Detection
         if (
@@ -234,9 +253,11 @@ export class RacingGameProjectComponent implements OnInit, OnDestroy {
       
       // Road stripes
       ctx.fillStyle = '#475569';
-      for(let i = 0; i < canvas.height; i += 40) {
-        const yOffset = (i + (frameCount * this.currentSpeed)) % canvas.height;
-        ctx.fillRect(canvas.width / 2 - 5, yOffset, 10, 20);
+      const stripeW = 10 * scale;
+      const stripeH = 40 * speedScale;
+      for(let i = 0; i < canvas.height + stripeH * 2; i += stripeH * 2) {
+        const yOffset = (i + (frameCount * this.currentSpeed * speedScale * 1.5)) % (canvas.height + stripeH * 2) - stripeH;
+        ctx.fillRect(canvas.width / 2 - stripeW / 2, yOffset, stripeW, stripeH);
       }
       
       // Draw obstacles
@@ -245,32 +266,32 @@ export class RacingGameProjectComponent implements OnInit, OnDestroy {
         ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
         // Shadow/3D effect
         ctx.fillStyle = 'rgba(0,0,0,0.3)';
-        ctx.fillRect(obs.x, obs.y + obs.height - 5, obs.width, 5);
+        ctx.fillRect(obs.x, obs.y + obs.height - 5 * scale, obs.width, 5 * scale);
       }
       
       // Draw car
       ctx.fillStyle = '#38BDF8';
-      ctx.fillRect(this.carX - 20, canvas.height - 80, 40, 60);
+      ctx.fillRect(this.carX - carW / 2, canvas.height - carH - 20, carW, carH);
       ctx.fillStyle = '#0284C7';
-      ctx.fillRect(this.carX - 15, canvas.height - 70, 30, 20); // windshield
+      ctx.fillRect(this.carX - carW / 2 + 5 * scale, canvas.height - carH - 10 * scale, carW - 10 * scale, carH / 3); // windshield
       
       // Draw action text
       ctx.fillStyle = 'white';
-      ctx.font = '20px sans-serif';
+      ctx.font = `bold ${Math.max(20, 24 * scale)}px sans-serif`;
       ctx.textAlign = 'center';
       if (this.currentAction !== 'none') {
-        ctx.fillText(this.currentAction.toUpperCase(), canvas.width / 2, 40);
+        ctx.fillText(this.currentAction.toUpperCase(), canvas.width / 2, 60 * scale);
       }
       
       if (this.gameOver) {
         ctx.fillStyle = 'rgba(0,0,0,0.7)';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         ctx.fillStyle = 'white';
-        ctx.font = '40px sans-serif';
+        ctx.font = `bold ${Math.max(30, 48 * scale)}px sans-serif`;
         ctx.textAlign = 'center';
-        ctx.fillText('CRASHED!', canvas.width / 2, canvas.height / 2 - 20);
-        ctx.font = '24px sans-serif';
-        ctx.fillText('Score: ' + this.score, canvas.width / 2, canvas.height / 2 + 20);
+        ctx.fillText('CRASHED!', canvas.width / 2, canvas.height / 2 - 20 * scale);
+        ctx.font = `bold ${Math.max(20, 32 * scale)}px sans-serif`;
+        ctx.fillText('Score: ' + this.score, canvas.width / 2, canvas.height / 2 + 30 * scale);
       } else {
         this.gameLoopId = requestAnimationFrame(loop);
       }

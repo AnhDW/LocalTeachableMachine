@@ -62,6 +62,8 @@ export class MathGameProjectComponent implements OnInit, OnDestroy {
   ngOnDestroy() {
     if (this.predictLoopId) clearTimeout(this.predictLoopId);
     if (this.gameLoopId) clearTimeout(this.gameLoopId);
+    this.mlService.stopInference();
+    this.webcamService.stopWebcam();
   }
 
   setDifficulty(level: 'easy' | 'medium' | 'hard') {
@@ -166,6 +168,8 @@ export class MathGameProjectComponent implements OnInit, OnDestroy {
     loop();
   }
 
+  @ViewChild(MultiHandWebcamPanelComponent) webcamPanel!: MultiHandWebcamPanelComponent;
+
   startGame() {
     if (!this.mlService.isTrained()) {
       alert("Vui lòng Import Model trước khi chơi!");
@@ -188,7 +192,12 @@ export class MathGameProjectComponent implements OnInit, OnDestroy {
     this.isPaused = false;
     this.nextQuestion();
     
+    // Đợi Angular render giao diện game (có chứa webcam panel)
     setTimeout(() => {
+      // Nếu webcam chưa được bật, tự động bật
+      if (!this.webcamService.isWebcamOn() && this.webcamPanel) {
+        this.webcamPanel.toggleWebcam();
+      }
       this.startGameLoop();
     }, 100);
   }
@@ -196,6 +205,9 @@ export class MathGameProjectComponent implements OnInit, OnDestroy {
   stopGame() {
     this.gameMode = false;
     if (this.gameLoopId) clearTimeout(this.gameLoopId);
+    
+    // Khi thoát khỏi game, nếu panel ở màn hình chờ đã render, luồng cam sẽ được tái kết nối tự động 
+    // vì chúng ta không tắt webcamService. Trừ khi người dùng rời hẳn khỏi trang (ngOnDestroy).
     this.mlService.stopInference();
     this.startPredicting();
   }
